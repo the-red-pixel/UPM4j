@@ -1,4 +1,4 @@
-package com.theredpixelteam.upm.loader;
+package com.theredpixelteam.upm4j.loader;
 
 import java.net.URL;
 import java.net.URLClassLoader;
