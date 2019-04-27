@@ -5,8 +5,8 @@ import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.util.*;
 
-public class UPMPluginDiscoverer {
-    public UPMPluginDiscoverer(PluginDiscoveringPolicy policy)
+public class PluginFileDiscoverer {
+    public PluginFileDiscoverer(PluginFileDiscoveringPolicy policy)
     {
         this.policy = Objects.requireNonNull(policy);
     }
@@ -26,8 +26,8 @@ public class UPMPluginDiscoverer {
         switch (policy.getType())
         {
             case SCAN_DIRECTORY:
-                PluginDiscoveringPolicy.ScanDirectory scanDirectory =
-                        (PluginDiscoveringPolicy.ScanDirectory) policy;
+                PluginFileDiscoveringPolicy.ScanDirectory scanDirectory =
+                        (PluginFileDiscoveringPolicy.ScanDirectory) policy;
 
                 File directory = scanDirectory.getDirectory();
 
@@ -44,8 +44,8 @@ public class UPMPluginDiscoverer {
                 break;
 
             case SPECIFIC_FILES:
-                PluginDiscoveringPolicy.SpecificFiles specificFiles =
-                        (PluginDiscoveringPolicy.SpecificFiles) policy;
+                PluginFileDiscoveringPolicy.SpecificFiles specificFiles =
+                        (PluginFileDiscoveringPolicy.SpecificFiles) policy;
 
                 for (File file : specificFiles.getFiles())
                     if (file.exists())
@@ -110,5 +110,5 @@ public class UPMPluginDiscoverer {
 
     private final Set<File> discovered = new HashSet<>();
 
-    private final PluginDiscoveringPolicy policy;
+    private final PluginFileDiscoveringPolicy policy;
 }

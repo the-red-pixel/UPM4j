@@ -6,8 +6,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 
-public abstract class PluginDiscoveringPolicy {
-    PluginDiscoveringPolicy(Type type)
+public abstract class PluginFileDiscoveringPolicy {
+    PluginFileDiscoveringPolicy(Type type)
     {
         this.type = type;
     }
@@ -17,22 +17,22 @@ public abstract class PluginDiscoveringPolicy {
         return type;
     }
 
-    public static PluginDiscoveringPolicy.ScanDirectory ofScanDirectory(File directory)
+    public static PluginFileDiscoveringPolicy.ScanDirectory ofScanDirectory(File directory)
     {
         return new ScanDirectory(Objects.requireNonNull(directory));
     }
 
-    public static PluginDiscoveringPolicy.SpecificFiles ofSpecificFiles(File... files)
+    public static PluginFileDiscoveringPolicy.SpecificFiles ofSpecificFiles(File... files)
     {
         return ofSpecificFiles(Arrays.asList(files));
     }
 
-    public static PluginDiscoveringPolicy.SpecificFiles ofSpecificFiles(Collection<File> files)
+    public static PluginFileDiscoveringPolicy.SpecificFiles ofSpecificFiles(Collection<File> files)
     {
         return new SpecificFiles(new HashSet<>(files));
     }
 
-    public static class ScanDirectory extends PluginDiscoveringPolicy
+    public static class ScanDirectory extends PluginFileDiscoveringPolicy
     {
         ScanDirectory(File directory)
         {
@@ -48,7 +48,7 @@ public abstract class PluginDiscoveringPolicy {
         private final File directory;
     }
 
-    public static class SpecificFiles extends PluginDiscoveringPolicy
+    public static class SpecificFiles extends PluginFileDiscoveringPolicy
     {
         SpecificFiles(Collection<File> files)
         {
