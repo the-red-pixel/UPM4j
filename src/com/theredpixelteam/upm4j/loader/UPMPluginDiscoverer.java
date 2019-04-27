@@ -3,20 +3,56 @@ package com.theredpixelteam.upm4j.loader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 public class UPMPluginDiscoverer {
     public UPMPluginDiscoverer(PluginDiscoveringPolicy policy)
     {
-        this.policy = policy;
+        this.policy = Objects.requireNonNull(policy);
     }
 
     public void discover()
     {
-        // TODO
+        discover((f, n) -> true);
+    }
+
+    public void discover(FileFilter filter)
+    {
+        discover((f, n) -> filter.accept(f));
+    }
+
+    public synchronized void discover(FilenameFilter filter)
+    {
+        switch (policy.getType())
+        {
+            case SCAN_DIRECTORY:
+                PluginDiscoveringPolicy.ScanDirectory scanDirectory =
+                        (PluginDiscoveringPolicy.ScanDirectory) policy;
+
+                File directory = scanDirectory.getDirectory();
+
+                if (!directory.isDirectory())
+                    return;
+
+                File[] files = directory.listFiles(filter);
+
+                if (files == null)
+                    return;
+
+                discovered.addAll(Arrays.asList(files));
+
+                break;
+
+            case SPECIFIC_FILES:
+                PluginDiscoveringPolicy.SpecificFiles specificFiles =
+                        (PluginDiscoveringPolicy.SpecificFiles) policy;
+
+                for (File file : specificFiles.getFiles())
+                    if (file.exists())
+                        discovered.add(file);
+
+                break;
+        }
     }
 
     public Set<File> getDiscovered()
@@ -26,20 +62,7 @@ public class UPMPluginDiscoverer {
 
     public int filter(FilenameFilter filter)
     {
-        int count = 0;
-
-        Iterator<File> iter = discovered.iterator();
-        while (iter.hasNext())
-        {
-            File file = iter.next();
-
-            if (!filter.accept(file, file.getName()))
-                iter.remove();
-
-            count++;
-        }
-
-        return count;
+        return filter((file) -> filter.accept(file, file.getName()));
     }
 
     public int filter(FileFilter filter)
