@@ -8,4 +8,6 @@ public interface Plugin {
     public @Nonnull String getIdentity();
 
     public @Nonnull Optional<String> getName();
+
+    public @Nonnull PluginState getState();
 }

@@ -1,5 +1,7 @@
 package com.theredpixelteam.upm4j.plugin;
 
+import javax.annotation.Nonnull;
+
 public interface PluginState {
-    public String getName();
+    public @Nonnull String getName();
 }

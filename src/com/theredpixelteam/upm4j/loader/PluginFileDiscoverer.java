@@ -1,14 +1,17 @@
 package com.theredpixelteam.upm4j.loader;
 
+import com.theredpixelteam.upm4j.UPMContext;
+
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.util.*;
 
 public class PluginFileDiscoverer {
-    public PluginFileDiscoverer(PluginFileDiscoveringPolicy policy)
+    public PluginFileDiscoverer(@Nonnull UPMContext context)
     {
-        this.policy = Objects.requireNonNull(policy);
+        this.policy = context.getFileDiscoveringPolicy();
     }
 
     public void discover()

@@ -1,28 +1,34 @@
 package com.theredpixelteam.upm4j;
 
+import com.theredpixelteam.redtea.util.Optional;
 import com.theredpixelteam.upm4j.loader.*;
+import com.theredpixelteam.upm4j.plugin.PluginStateTree;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
 
-public class UPMGlobal {
-    UPMGlobal(@Nonnull PluginClassLoaderPolicy classLoaderPolicy,
-              @Nonnull PluginFileDiscoveringPolicy fileDiscoveringPolicy,
-              @Nonnull PluginDiscoveringPolicy discoveringPolicy,
-              @Nonnull PluginClassLoadingPolicy classLoadingPolicy,
-              @Nonnull PluginInvocationPolicy invocationPolicy)
+public class UPMContext {
+    UPMContext(@Nullable String name,
+               @Nonnull UPMClassLoaderProvider classLoaderProvider,
+               @Nonnull PluginFileDiscoveringPolicy fileDiscoveringPolicy,
+               @Nonnull PluginDiscoveringPolicy discoveringPolicy,
+               @Nonnull PluginClassLoadingPolicy classLoadingPolicy,
+               @Nonnull PluginInvocationPolicy invocationPolicy,
+               @Nonnull PluginStateTree pluginStateTree)
     {
-        this.classLoaderPolicy = classLoaderPolicy;
+        this.name = name;
+        this.classLoaderProvider = classLoaderProvider;
         this.fileDiscoveringPolicy = fileDiscoveringPolicy;
         this.discoveringPolicy = discoveringPolicy;
         this.classLoadingPolicy = classLoadingPolicy;
         this.invocationPolicy = invocationPolicy;
+        this.pluginStateTree = pluginStateTree;
     }
 
-    public @Nonnull PluginClassLoaderPolicy getClassLoaderPolicy()
+    public @Nonnull UPMClassLoaderProvider getClassLoaderProvider()
     {
-        return classLoaderPolicy;
+        return classLoaderProvider;
     }
 
     public @Nonnull PluginClassLoadingPolicy getClassLoadingPolicy()
@@ -45,10 +51,17 @@ public class UPMGlobal {
         return invocationPolicy;
     }
 
+    public @Nullable Optional<String> getName()
+    {
+        return Optional.ofNullable(name);
+    }
+
     public static @Nonnull Builder builder()
     {
         return new Builder();
     }
+
+    private final String name;
 
     private final PluginInvocationPolicy invocationPolicy;
 
@@ -58,7 +71,9 @@ public class UPMGlobal {
 
     private final PluginClassLoadingPolicy classLoadingPolicy;
 
-    private final PluginClassLoaderPolicy classLoaderPolicy;
+    private final UPMClassLoaderProvider classLoaderProvider;
+
+    private final PluginStateTree pluginStateTree;
 
     public static final class Builder
     {
@@ -84,9 +99,9 @@ public class UPMGlobal {
             return this;
         }
 
-        public @Nonnull Builder classLoaderPolicy(@Nonnull PluginClassLoaderPolicy classLoaderPolicy)
+        public @Nonnull Builder classLoaderPolicy(@Nonnull UPMClassLoaderProvider classLoaderProvider)
         {
-            this.classLoaderPolicy = Objects.requireNonNull(classLoaderPolicy);
+            this.classLoaderProvider = Objects.requireNonNull(classLoaderProvider);
             return this;
         }
 
@@ -96,9 +111,26 @@ public class UPMGlobal {
             return this;
         }
 
-        public @Nullable PluginClassLoaderPolicy getClassLoaderPolicy()
+        public @Nonnull Builder pluginStateTree(@Nonnull PluginStateTree pluginStateTree)
         {
-            return classLoaderPolicy;
+            this.pluginStateTree = pluginStateTree;
+            return this;
+        }
+
+        public @Nonnull Builder name(@Nullable String name)
+        {
+            this.name = name;
+            return this;
+        }
+
+        public @Nullable String getName()
+        {
+            return name;
+        }
+
+        public @Nullable UPMClassLoaderProvider getClassLoaderProvider()
+        {
+            return classLoaderProvider;
         }
 
         public @Nullable PluginClassLoadingPolicy getClassLoadingPolicy()
@@ -121,16 +153,25 @@ public class UPMGlobal {
             return invocationPolicy;
         }
 
-        public @Nonnull UPMGlobal build()
+        public @Nonnull PluginStateTree getPluginStateTree()
         {
-            return new UPMGlobal(
-                    Objects.requireNonNull(classLoaderPolicy, "ClassLoaderPolicy"),
+            return pluginStateTree;
+        }
+
+        public @Nonnull UPMContext build()
+        {
+            return new UPMContext(
+                    name,
+                    Objects.requireNonNull(classLoaderProvider, "ClassLoaderPolicy"),
                     Objects.requireNonNull(fileDiscoveringPolicy, "FileDiscoveringPolicy"),
                     Objects.requireNonNull(discoveringPolicy, "DiscoveringPolicy"),
                     Objects.requireNonNull(classLoadingPolicy, "ClassLoadingPolicy"),
-                    Objects.requireNonNull(invocationPolicy, "InvocationPolicy")
+                    Objects.requireNonNull(invocationPolicy, "InvocationPolicy"),
+                    Objects.requireNonNull(pluginStateTree, "PluginStateTree")
             );
         }
+
+        private String name;
 
         private PluginInvocationPolicy invocationPolicy;
 
@@ -140,6 +181,8 @@ public class UPMGlobal {
 
         private PluginClassLoadingPolicy classLoadingPolicy;
 
-        private PluginClassLoaderPolicy classLoaderPolicy;
+        private UPMClassLoaderProvider classLoaderProvider;
+
+        private PluginStateTree pluginStateTree;
     }
 }

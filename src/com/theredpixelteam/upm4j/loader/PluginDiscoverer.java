@@ -1,17 +1,38 @@
 package com.theredpixelteam.upm4j.loader;
 
-import java.io.File;
+import com.theredpixelteam.upm4j.UPMContext;
+import com.theredpixelteam.upm4j.loader.source.PluginSource;
+
+import javax.annotation.Nonnull;
+import java.util.Objects;
 
 public class PluginDiscoverer {
-    public PluginDiscoverer(File file, UPMClassLoader loader, PluginDiscoveringPolicy policy)
+    public PluginDiscoverer(@Nonnull UPMContext context,
+                            @Nonnull PluginSource source)
     {
-        this.file = file;
+        this.source = Objects.requireNonNull(source, "source");
+        this.classLoader = context.getClassLoaderProvider().provide();
+        this.policy = context.getDiscoveringPolicy();
     }
 
-    public File getFile()
+    public @Nonnull PluginSource getSource()
     {
-        return file;
+        return source;
     }
 
-    private final File file;
+    public @Nonnull PluginDiscoveringPolicy getPolicy()
+    {
+        return policy;
+    }
+
+    public @Nonnull UPMClassLoader getClassLoader()
+    {
+        return classLoader;
+    }
+
+    private final PluginSource source;
+
+    private final PluginDiscoveringPolicy policy;
+
+    private final UPMClassLoader classLoader;
 }
