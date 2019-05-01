@@ -1,6 +1,7 @@
 package com.theredpixelteam.upm4j.loader;
 
-public enum PluginMoutingPolicy {
+public enum PluginDiscoveringPolicy {
     SINGLE,
+    RESTRICTED_SINGLE,
     MULTIPLE
 }
