@@ -1,6 +1,9 @@
 package com.theredpixelteam.upm4j;
 
 import com.theredpixelteam.redtea.util.Optional;
+import com.theredpixelteam.redtea.util.ShouldNotReachHere;
+import com.theredpixelteam.upm4j.invoke.ClassicInvokerProviders;
+import com.theredpixelteam.upm4j.invoke.InvokerProvider;
 import com.theredpixelteam.upm4j.loader.*;
 import com.theredpixelteam.upm4j.plugin.PluginStateTree;
 
@@ -14,7 +17,7 @@ public class UPMContext {
                @Nonnull PluginFileDiscoveringPolicy fileDiscoveringPolicy,
                @Nonnull PluginDiscoveringPolicy discoveringPolicy,
                @Nonnull PluginClassLoadingPolicy classLoadingPolicy,
-               @Nonnull PluginInvocationPolicy invocationPolicy,
+               @Nonnull InvokerProvider invokerProvider,
                @Nonnull PluginStateTree pluginStateTree)
     {
         this.name = name;
@@ -22,7 +25,7 @@ public class UPMContext {
         this.fileDiscoveringPolicy = fileDiscoveringPolicy;
         this.discoveringPolicy = discoveringPolicy;
         this.classLoadingPolicy = classLoadingPolicy;
-        this.invocationPolicy = invocationPolicy;
+        this.invokerProvider = invokerProvider;
         this.pluginStateTree = pluginStateTree;
     }
 
@@ -46,9 +49,14 @@ public class UPMContext {
         return fileDiscoveringPolicy;
     }
 
-    public @Nonnull PluginInvocationPolicy getInvocationPolicy()
+    public @Nonnull InvokerProvider getInvokerProvider()
     {
-        return invocationPolicy;
+        return invokerProvider;
+    }
+
+    public @Nonnull PluginStateTree getPluginStateTree()
+    {
+        return pluginStateTree;
     }
 
     public @Nullable Optional<String> getName()
@@ -63,7 +71,7 @@ public class UPMContext {
 
     private final String name;
 
-    private final PluginInvocationPolicy invocationPolicy;
+    private final InvokerProvider invokerProvider;
 
     private final PluginFileDiscoveringPolicy fileDiscoveringPolicy;
 
@@ -83,7 +91,23 @@ public class UPMContext {
 
         public @Nonnull Builder invocationPolicy(@Nonnull PluginInvocationPolicy invocationPolicy)
         {
-            this.invocationPolicy = Objects.requireNonNull(invocationPolicy);
+            Objects.requireNonNull(invocationPolicy);
+
+            switch (invocationPolicy)
+            {
+                case ASM_INVOKE:
+                    return invokerProvider(ClassicInvokerProviders.ASM);
+
+                case REFLECTION:
+                    return invokerProvider(ClassicInvokerProviders.REFLECTION);
+            }
+
+            throw new ShouldNotReachHere();
+        }
+
+        public @Nonnull Builder invokerProvider(@Nonnull InvokerProvider invokerProvider)
+        {
+            this.invokerProvider = Objects.requireNonNull(invokerProvider);
             return this;
         }
 
@@ -148,9 +172,9 @@ public class UPMContext {
             return fileDiscoveringPolicy;
         }
 
-        public @Nullable PluginInvocationPolicy getInvocationPolicy()
+        public @Nullable InvokerProvider getInvokerProvider()
         {
-            return invocationPolicy;
+            return invokerProvider;
         }
 
         public @Nonnull PluginStateTree getPluginStateTree()
@@ -166,14 +190,14 @@ public class UPMContext {
                     Objects.requireNonNull(fileDiscoveringPolicy, "FileDiscoveringPolicy"),
                     Objects.requireNonNull(discoveringPolicy, "DiscoveringPolicy"),
                     Objects.requireNonNull(classLoadingPolicy, "ClassLoadingPolicy"),
-                    Objects.requireNonNull(invocationPolicy, "InvocationPolicy"),
+                    Objects.requireNonNull(invokerProvider, "InvokerProvider"),
                     Objects.requireNonNull(pluginStateTree, "PluginStateTree")
             );
         }
 
         private String name;
 
-        private PluginInvocationPolicy invocationPolicy;
+        private InvokerProvider invokerProvider;
 
         private PluginFileDiscoveringPolicy fileDiscoveringPolicy;
 
