@@ -1,6 +1,7 @@
 package com.theredpixelteam.upm4j.loader;
 
 import com.theredpixelteam.upm4j.UPMContext;
+import com.theredpixelteam.upm4j.loader.event.PluginFileDiscoveredEvent;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -11,6 +12,7 @@ import java.util.*;
 public class PluginFileDiscoverer {
     public PluginFileDiscoverer(@Nonnull UPMContext context)
     {
+        this.context = context;
         this.policy = context.getFileDiscoveringPolicy();
     }
 
@@ -42,7 +44,8 @@ public class PluginFileDiscoverer {
                 if (files == null)
                     return;
 
-                discovered.addAll(Arrays.asList(files));
+                for (File file : files)
+                    postAndRegster(file);
 
                 break;
 
@@ -52,10 +55,21 @@ public class PluginFileDiscoverer {
 
                 for (File file : specificFiles.getFiles())
                     if (file.exists())
-                        discovered.add(file);
+                        postAndRegster(file);
 
                 break;
         }
+    }
+
+    private void postAndRegster(File file)
+    {
+        PluginFileDiscoveredEvent event;
+
+        context.getEventBus()
+                .post(event = new PluginFileDiscoveredEvent(this, file));
+
+        if (!event.isCancelled())
+            discovered.add(file);
     }
 
     public Set<File> getDiscovered()
@@ -91,25 +105,32 @@ public class PluginFileDiscoverer {
         return discovered.size();
     }
 
+    public @Nonnull UPMContext getContext()
+    {
+        return context;
+    }
+
     public void reset()
     {
         discovered.clear();
     }
 
-    public void addFile(File file)
+    public void addFile(@Nonnull File file)
     {
-        discovered.add(file);
+        discovered.add(Objects.requireNonNull(file));
     }
 
-    public boolean containsFile(File file)
+    public boolean containsFile(@Nonnull File file)
     {
-        return discovered.contains(file);
+        return discovered.contains(Objects.requireNonNull(file));
     }
 
-    public boolean removeFile(File file)
+    public boolean removeFile(@Nonnull File file)
     {
-        return discovered.remove(file);
+        return discovered.remove(Objects.requireNonNull(file));
     }
+
+    private final UPMContext context;
 
     private final Set<File> discovered = new HashSet<>();
 

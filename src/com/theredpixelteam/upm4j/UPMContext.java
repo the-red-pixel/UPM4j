@@ -1,5 +1,7 @@
 package com.theredpixelteam.upm4j;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.SubscriberExceptionHandler;
 import com.theredpixelteam.redtea.util.Optional;
 import com.theredpixelteam.redtea.util.ShouldNotReachHere;
 import com.theredpixelteam.upm4j.invoke.ClassicInvokerProviders;
@@ -11,6 +13,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
 
+@SuppressWarnings("all")
 public class UPMContext {
     UPMContext(@Nullable String name,
                @Nonnull UPMClassLoaderProvider classLoaderProvider,
@@ -18,7 +21,8 @@ public class UPMContext {
                @Nonnull PluginDiscoveringPolicy discoveringPolicy,
                @Nonnull PluginClassLoadingPolicy classLoadingPolicy,
                @Nonnull InvokerProvider invokerProvider,
-               @Nonnull PluginStateTree pluginStateTree)
+               @Nonnull PluginStateTree pluginStateTree,
+               @Nullable SubscriberExceptionHandler eventBusExceptionHandler)
     {
         this.name = name;
         this.classLoaderProvider = classLoaderProvider;
@@ -27,6 +31,8 @@ public class UPMContext {
         this.classLoadingPolicy = classLoadingPolicy;
         this.invokerProvider = invokerProvider;
         this.pluginStateTree = pluginStateTree;
+        this.eventBus = eventBusExceptionHandler == null ?
+                new EventBus() : new EventBus(eventBusExceptionHandler);
     }
 
     public @Nonnull UPMClassLoaderProvider getClassLoaderProvider()
@@ -59,15 +65,22 @@ public class UPMContext {
         return pluginStateTree;
     }
 
-    public @Nullable Optional<String> getName()
+    public @Nonnull Optional<String> getName()
     {
         return Optional.ofNullable(name);
+    }
+
+    public @Nonnull EventBus getEventBus()
+    {
+        return eventBus;
     }
 
     public static @Nonnull Builder builder()
     {
         return new Builder();
     }
+
+    private final EventBus eventBus;
 
     private final String name;
 
@@ -147,6 +160,12 @@ public class UPMContext {
             return this;
         }
 
+        public @Nullable Builder eventBusExceptionHandler(@Nullable SubscriberExceptionHandler handler)
+        {
+            this.eventBusExceptionHandler = handler;
+            return this;
+        }
+
         public @Nullable String getName()
         {
             return name;
@@ -177,7 +196,12 @@ public class UPMContext {
             return invokerProvider;
         }
 
-        public @Nonnull PluginStateTree getPluginStateTree()
+        public @Nullable SubscriberExceptionHandler getEventBusExceptionHandler()
+        {
+            return eventBusExceptionHandler;
+        }
+
+        public @Nullable PluginStateTree getPluginStateTree()
         {
             return pluginStateTree;
         }
@@ -191,11 +215,14 @@ public class UPMContext {
                     Objects.requireNonNull(discoveringPolicy, "DiscoveringPolicy"),
                     Objects.requireNonNull(classLoadingPolicy, "ClassLoadingPolicy"),
                     Objects.requireNonNull(invokerProvider, "InvokerProvider"),
-                    Objects.requireNonNull(pluginStateTree, "PluginStateTree")
+                    Objects.requireNonNull(pluginStateTree, "PluginStateTree"),
+                    eventBusExceptionHandler
             );
         }
 
         private String name;
+
+        private SubscriberExceptionHandler eventBusExceptionHandler;
 
         private InvokerProvider invokerProvider;
 
