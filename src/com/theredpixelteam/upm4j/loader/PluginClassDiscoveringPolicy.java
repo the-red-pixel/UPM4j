@@ -1,5 +1,8 @@
 package com.theredpixelteam.upm4j.loader;
 
+import com.theredpixelteam.upm4j.UPMContext;
+import com.theredpixelteam.upm4j.loader.attribution.AttributionWorkflow;
+import com.theredpixelteam.upm4j.loader.attribution.ConfiguratedAttributionProvider;
 import com.theredpixelteam.upm4j.loader.attribution.FixedClassAttributionProvider;
 import com.theredpixelteam.upm4j.loader.source.PluginSource;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
@@ -7,9 +10,7 @@ import org.kucro3.jam2.util.Jam2Util;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 public abstract class PluginClassDiscoveringPolicy {
@@ -18,7 +19,8 @@ public abstract class PluginClassDiscoveringPolicy {
         this.type = type;
     }
 
-    public abstract @Nonnull Collection<PluginAttribution> search(@Nonnull PluginSource source)
+    public abstract @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
+                                                                  @Nonnull PluginSource source)
             throws IOException;
 
     public @Nonnull Type getType()
@@ -32,6 +34,7 @@ public abstract class PluginClassDiscoveringPolicy {
     {
         FIXED,
         CONFIGURATED,
+        CONFIGURATION_FILES,
         SCAN_ANNOTATION,
         SCAN_SUBCLASS
     }
@@ -52,12 +55,13 @@ public abstract class PluginClassDiscoveringPolicy {
             return names;
         }
 
-        public @Nonnull Collection<PluginAttribution> search(@Nonnull PluginSource source)
+        public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
+                                                             @Nonnull PluginSource source)
                 throws IOException
         {
             Objects.requireNonNull(source);
 
-            List<PluginAttribution> attributions = new ArrayList<>();
+            AttributionWorkflow workflow = new AttributionWorkflow(context);
 
             for (String name : names)
             {
@@ -65,15 +69,40 @@ public abstract class PluginClassDiscoveringPolicy {
                         Jam2Util.fromInternalNameToResource(
                         Jam2Util.fromCanonicalToInternalName(name));
 
-                source.getEntry(name).ifPresent((entry) -> attributions.addAll(provider.provide(name, entry)));
+                source.getEntry(sourceName).ifPresent(
+                        (entry) -> provider.provide(workflow, name, entry));
             }
 
-            return attributions;
+            return workflow.buildAll();
         }
 
         private final FixedClassAttributionProvider provider;
 
         private final Collection<String> names;
+    }
+
+    public static class Configurated extends PluginClassDiscoveringPolicy
+    {
+        Configurated(@Nonnull ConfiguratedAttributionProvider provider)
+        {
+            super(Type.CONFIGURATED);
+
+            this.provider = provider;
+        }
+
+        @Override
+        public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
+                                                             @Nonnull PluginSource source)
+                throws IOException
+        {
+            AttributionWorkflow workflow = new AttributionWorkflow(context);
+
+            provider.provide(workflow, source);
+
+            return workflow.buildAll();
+        }
+
+        private final ConfiguratedAttributionProvider provider;
     }
 
     // TODO

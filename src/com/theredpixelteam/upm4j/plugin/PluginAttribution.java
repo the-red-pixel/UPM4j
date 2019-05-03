@@ -5,7 +5,8 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 public class PluginAttribution {
-    PluginAttribution(@Nonnull String identity,
+    PluginAttribution(@Nonnull String mainClass,
+                      @Nonnull String identity,
                       @Nullable String name,
                       @Nullable String version,
                       @Nullable String description,
@@ -13,7 +14,8 @@ public class PluginAttribution {
                       @Nonnull Collection<String> authors,
                       @Nonnull Map<String, Object> extraAttributions)
     {
-        this.identity = Objects.requireNonNull(identity);
+        this.mainClass = Objects.requireNonNull(mainClass, "mainClass");
+        this.identity = Objects.requireNonNull(identity, "identity");
         this.name = name;
         this.version = version;
         this.description = description;
@@ -79,6 +81,8 @@ public class PluginAttribution {
         return new Builder();
     }
 
+    private final String mainClass;
+
     private final String name;
 
     private final String identity;
@@ -99,9 +103,9 @@ public class PluginAttribution {
         {
         }
 
-        public @Nonnull Builder identity(@Nullable String identity)
+        public @Nonnull Builder identity(@Nonnull String identity)
         {
-            this.identity = identity;
+            this.identity = Objects.requireNonNull(identity);
             return this;
         }
 
@@ -129,6 +133,12 @@ public class PluginAttribution {
             return this;
         }
 
+        public @Nonnull Builder mainClass(@Nonnull String mainClass)
+        {
+            this.mainClass = Objects.requireNonNull(mainClass);
+            return this;
+        }
+
         public @Nullable String getIdentity()
         {
             return identity;
@@ -152,6 +162,11 @@ public class PluginAttribution {
         public @Nullable String getWebsite()
         {
             return website;
+        }
+
+        public @Nullable String getMainClass()
+        {
+            return mainClass;
         }
 
         public @Nonnull Collection<String> getAuthors()
@@ -193,7 +208,8 @@ public class PluginAttribution {
         public PluginAttribution build()
         {
             return new PluginAttribution(
-                    Objects.requireNonNull(identity, "identity"),
+                    mainClass,
+                    identity,
                     name,
                     version,
                     description,
@@ -202,6 +218,8 @@ public class PluginAttribution {
                     extraAttributions
             );
         }
+
+        private String mainClass;
 
         private String name;
 

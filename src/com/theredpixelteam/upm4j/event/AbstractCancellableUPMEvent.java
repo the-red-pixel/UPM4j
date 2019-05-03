@@ -3,12 +3,11 @@ package com.theredpixelteam.upm4j.event;
 import com.theredpixelteam.upm4j.UPMContext;
 
 import javax.annotation.Nonnull;
-import java.util.Objects;
 
-public abstract class AbstractCancellableUPMEvent implements UPMEvent.Cancellable {
+public abstract class AbstractCancellableUPMEvent extends AbstractUPMEvent implements UPMEvent.Cancellable {
     protected AbstractCancellableUPMEvent(@Nonnull UPMContext context)
     {
-        this.context = Objects.requireNonNull(context);
+        super(context);
     }
 
     @Override
@@ -23,13 +22,5 @@ public abstract class AbstractCancellableUPMEvent implements UPMEvent.Cancellabl
         this.cancelled = true;
     }
 
-    @Override
-    public UPMContext getContext()
-    {
-        return context;
-    }
-
     protected boolean cancelled;
-
-    protected final UPMContext context;
 }
