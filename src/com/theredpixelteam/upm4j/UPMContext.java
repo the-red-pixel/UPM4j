@@ -18,8 +18,8 @@ public class UPMContext {
     UPMContext(@Nullable String name,
                @Nonnull UPMClassLoaderProvider classLoaderProvider,
                @Nonnull PluginFileDiscoveringPolicy fileDiscoveringPolicy,
-               @Nonnull PluginDiscoveringPolicy discoveringPolicy,
-               @Nonnull PluginClassLoadingPolicy classLoadingPolicy,
+               @Nonnull PluginInstanceDiscoveringPolicy discoveringPolicy,
+               @Nonnull PluginClassDiscoveringPolicy classDiscoveringPolicy,
                @Nonnull InvokerProvider invokerProvider,
                @Nonnull PluginStateTree pluginStateTree,
                @Nullable SubscriberExceptionHandler eventBusExceptionHandler)
@@ -28,7 +28,7 @@ public class UPMContext {
         this.classLoaderProvider = classLoaderProvider;
         this.fileDiscoveringPolicy = fileDiscoveringPolicy;
         this.discoveringPolicy = discoveringPolicy;
-        this.classLoadingPolicy = classLoadingPolicy;
+        this.classDiscoveringPolicy = classDiscoveringPolicy;
         this.invokerProvider = invokerProvider;
         this.pluginStateTree = pluginStateTree;
         this.eventBus = eventBusExceptionHandler == null ?
@@ -40,12 +40,13 @@ public class UPMContext {
         return classLoaderProvider;
     }
 
-    public @Nonnull PluginClassLoadingPolicy getClassLoadingPolicy()
+    public @Nonnull PluginClassDiscoveringPolicy getClassDiscoveringPolicy()
     {
-        return classLoadingPolicy;
+        return classDiscoveringPolicy;
     }
 
-    public @Nonnull PluginDiscoveringPolicy getDiscoveringPolicy()
+    public @Nonnull
+    PluginInstanceDiscoveringPolicy getInstanceDiscoveringPolicy()
     {
         return discoveringPolicy;
     }
@@ -88,9 +89,9 @@ public class UPMContext {
 
     private final PluginFileDiscoveringPolicy fileDiscoveringPolicy;
 
-    private final PluginDiscoveringPolicy discoveringPolicy;
+    private final PluginInstanceDiscoveringPolicy discoveringPolicy;
 
-    private final PluginClassLoadingPolicy classLoadingPolicy;
+    private final PluginClassDiscoveringPolicy classDiscoveringPolicy;
 
     private final UPMClassLoaderProvider classLoaderProvider;
 
@@ -130,9 +131,9 @@ public class UPMContext {
             return this;
         }
 
-        public @Nonnull Builder classLoadingPolicy(@Nonnull PluginClassLoadingPolicy classLoadingPolicy)
+        public @Nonnull Builder classDiscoveringPolicy(@Nonnull PluginClassDiscoveringPolicy classDiscoveringPolicy)
         {
-            this.classLoadingPolicy = Objects.requireNonNull(classLoadingPolicy);
+            this.classDiscoveringPolicy = Objects.requireNonNull(classDiscoveringPolicy);
             return this;
         }
 
@@ -142,15 +143,15 @@ public class UPMContext {
             return this;
         }
 
-        public @Nonnull Builder discoveringPolicy(@Nonnull PluginDiscoveringPolicy discoveringPolicy)
+        public @Nonnull Builder instanceDiscoveringPolicy(@Nonnull PluginInstanceDiscoveringPolicy discoveringPolicy)
         {
-            this.discoveringPolicy = Objects.requireNonNull(discoveringPolicy);
+            this.instanceDiscoveringPolicy = Objects.requireNonNull(discoveringPolicy);
             return this;
         }
 
         public @Nonnull Builder pluginStateTree(@Nonnull PluginStateTree pluginStateTree)
         {
-            this.pluginStateTree = pluginStateTree;
+            this.pluginStateTree = Objects.requireNonNull(pluginStateTree);
             return this;
         }
 
@@ -176,14 +177,15 @@ public class UPMContext {
             return classLoaderProvider;
         }
 
-        public @Nullable PluginClassLoadingPolicy getClassLoadingPolicy()
+        public @Nullable PluginClassDiscoveringPolicy getClassDiscoveringPolicy()
         {
-            return classLoadingPolicy;
+            return classDiscoveringPolicy;
         }
 
-        public @Nullable PluginDiscoveringPolicy getDiscoveringPolicy()
+        public @Nullable
+        PluginInstanceDiscoveringPolicy getDiscoveringPolicy()
         {
-            return discoveringPolicy;
+            return instanceDiscoveringPolicy;
         }
 
         public @Nullable PluginFileDiscoveringPolicy getFileDiscoveringPolicy()
@@ -212,8 +214,8 @@ public class UPMContext {
                     name,
                     Objects.requireNonNull(classLoaderProvider, "ClassLoaderPolicy"),
                     Objects.requireNonNull(fileDiscoveringPolicy, "FileDiscoveringPolicy"),
-                    Objects.requireNonNull(discoveringPolicy, "DiscoveringPolicy"),
-                    Objects.requireNonNull(classLoadingPolicy, "ClassLoadingPolicy"),
+                    Objects.requireNonNull(instanceDiscoveringPolicy, "InstanceDiscoveringPolicy"),
+                    Objects.requireNonNull(classDiscoveringPolicy, "ClassDiscoveringPolicy"),
                     Objects.requireNonNull(invokerProvider, "InvokerProvider"),
                     Objects.requireNonNull(pluginStateTree, "PluginStateTree"),
                     eventBusExceptionHandler
@@ -228,9 +230,9 @@ public class UPMContext {
 
         private PluginFileDiscoveringPolicy fileDiscoveringPolicy;
 
-        private PluginDiscoveringPolicy discoveringPolicy;
+        private PluginInstanceDiscoveringPolicy instanceDiscoveringPolicy;
 
-        private PluginClassLoadingPolicy classLoadingPolicy;
+        private PluginClassDiscoveringPolicy classDiscoveringPolicy;
 
         private UPMClassLoaderProvider classLoaderProvider;
 

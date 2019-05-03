@@ -3,6 +3,7 @@ package com.theredpixelteam.upm4j.loader;
 import com.theredpixelteam.redtea.util.Optional;
 import com.theredpixelteam.redtea.util.Pair;
 import com.theredpixelteam.upm4j.loader.tweaker.ClassTweaker;
+import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 
 import javax.annotation.Nonnull;
 import java.net.URL;
@@ -10,9 +11,10 @@ import java.net.URLClassLoader;
 import java.util.*;
 
 public class UPMClassLoader extends URLClassLoader {
-    public UPMClassLoader()
+    public UPMClassLoader(boolean global)
     {
         super(new URL[0]);
+        this.global = global;
     }
 
     @Override
@@ -99,6 +101,20 @@ public class UPMClassLoader extends URLClassLoader {
             }
         }
     }
+
+    public boolean isGlobal()
+    {
+        return global;
+    }
+
+    public boolean isIndividual()
+    {
+        return !global;
+    }
+
+    private final boolean global;
+
+    private final Set<PluginAttribution> attachmentSet = new HashSet<>();
 
     private final LinkedList<Pair<ClassTweaker, Set<String>>> tweakersWaitingForDependencies = new LinkedList<>();
 

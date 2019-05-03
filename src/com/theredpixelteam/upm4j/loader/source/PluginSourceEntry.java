@@ -7,4 +7,6 @@ public interface PluginSourceEntry {
     public @Nonnull String getName() throws IOException;
 
     public @Nonnull byte[] getBytes() throws IOException;
+
+    public @Nonnull PluginSource getSource();
 }

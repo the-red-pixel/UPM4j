@@ -3,12 +3,12 @@ package com.theredpixelteam.upm4j.loader.source;
 import com.theredpixelteam.redtea.function.BiConsumer;
 import com.theredpixelteam.redtea.function.Consumer;
 import com.theredpixelteam.redtea.util.FilteredIterator;
+import com.theredpixelteam.redtea.util.Optional;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.Optional;
 
 public interface PluginSource {
     public @Nonnull String getName();

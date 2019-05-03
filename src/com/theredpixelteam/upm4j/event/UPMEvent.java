@@ -1,7 +1,11 @@
 package com.theredpixelteam.upm4j.event;
 
+import com.theredpixelteam.upm4j.UPMContext;
+
 public interface UPMEvent {
-    public interface Cancellable
+    public UPMContext getContext();
+
+    public interface Cancellable extends UPMEvent
     {
         public boolean isCancelled();
 

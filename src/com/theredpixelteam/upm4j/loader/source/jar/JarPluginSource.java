@@ -1,6 +1,7 @@
 package com.theredpixelteam.upm4j.loader.source.jar;
 
 import com.theredpixelteam.redtea.function.Consumer;
+import com.theredpixelteam.redtea.util.Optional;
 import com.theredpixelteam.upm4j.loader.source.PluginSource;
 import com.theredpixelteam.upm4j.loader.source.PluginSourceEntry;
 
@@ -64,7 +65,7 @@ public class JarPluginSource implements PluginSource {
         {
             JarEntry entry = entryEnumeration.nextElement();
 
-            entries.put(entry.getName(), new JarPluginSourceEntry(jar, entry));
+            entries.put(entry.getName(), new JarPluginSourceEntry(this, jar, entry));
         }
 
         polled = true;

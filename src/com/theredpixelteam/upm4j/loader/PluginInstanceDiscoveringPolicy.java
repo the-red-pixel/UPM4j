@@ -1,6 +1,6 @@
 package com.theredpixelteam.upm4j.loader;
 
-public enum PluginDiscoveringPolicy {
+public enum PluginInstanceDiscoveringPolicy {
     SINGLE,
     RESTRICTED_SINGLE,
     MULTIPLE

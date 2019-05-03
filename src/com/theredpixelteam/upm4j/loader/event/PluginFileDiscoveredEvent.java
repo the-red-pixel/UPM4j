@@ -11,6 +11,7 @@ public class PluginFileDiscoveredEvent extends AbstractCancellableUPMEvent {
     public PluginFileDiscoveredEvent(@Nonnull PluginFileDiscoverer discoverer,
                                      @Nonnull File file)
     {
+        super(discoverer.getContext());
         this.discoverer = Objects.requireNonNull(discoverer, "discoverer");
         this.file = Objects.requireNonNull(file, "file");
     }
