@@ -16,26 +16,26 @@ public interface PluginSource {
     public @Nonnull Iterator<PluginSourceEntry> getEntries();
 
     public default @Nonnull
-    Iterator<PluginSourceEntry> getEntries(@Nonnull SourceEntryFilter filter)
+    Iterable<PluginSourceEntry> getEntries(@Nonnull SourceEntryFilter filter)
     {
         Objects.requireNonNull(filter);
 
-        return FilteredIterator.of(getEntries(), filter::accept);
+        return () -> FilteredIterator.of(getEntries(), filter::accept);
     }
 
     public default @Nonnull
-    Iterator<PluginSourceEntry> getEntries(@Nonnull SourceEntryNameFilter filter)
+    Iterable<PluginSourceEntry> getEntries(@Nonnull SourceEntryNameFilter filter)
     {
         return getEntries(filter, (entry, ioException) -> {/* mute */});
     }
 
     public default @Nonnull
-    Iterator<PluginSourceEntry> getEntries(@Nonnull SourceEntryNameFilter filter,
+    Iterable<PluginSourceEntry> getEntries(@Nonnull SourceEntryNameFilter filter,
                                            @Nonnull BiConsumer<PluginSourceEntry, IOException> ioExceptionHandler)
     {
         Objects.requireNonNull(filter);
 
-        return FilteredIterator.of(getEntries(), (entry) -> {
+        return () -> FilteredIterator.of(getEntries(), (entry) -> {
             try {
                 return filter.accept(entry.getName());
             } catch (IOException e) {

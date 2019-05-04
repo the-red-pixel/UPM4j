@@ -2,16 +2,20 @@ package com.theredpixelteam.upm4j.loader;
 
 import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.loader.attribution.AttributionWorkflow;
-import com.theredpixelteam.upm4j.loader.attribution.ConfiguratedAttributionProvider;
-import com.theredpixelteam.upm4j.loader.attribution.FixedClassAttributionProvider;
+import com.theredpixelteam.upm4j.loader.attribution.processor.*;
 import com.theredpixelteam.upm4j.loader.source.PluginSource;
+import com.theredpixelteam.upm4j.loader.source.PluginSourceEntry;
+import com.theredpixelteam.upm4j.loader.source.SourceEntryNameFilter;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 import org.kucro3.jam2.util.Jam2Util;
+import org.kucro3.jam2.util.annotation.Annotations;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Objects;
+import java.lang.annotation.Annotation;
+import java.util.*;
 
 public abstract class PluginClassDiscoveringPolicy {
     PluginClassDiscoveringPolicy(Type type)
@@ -28,6 +32,8 @@ public abstract class PluginClassDiscoveringPolicy {
         return type;
     }
 
+    // TODO
+
     private final Type type;
 
     public static enum Type
@@ -35,19 +41,19 @@ public abstract class PluginClassDiscoveringPolicy {
         FIXED,
         CONFIGURATED,
         CONFIGURATION_FILES,
-        SCAN_ANNOTATION,
-        SCAN_SUBCLASS
+        SCAN_ANNOTATIONS,
+        SCAN_SUBCLASSES
     }
 
     public static class Fixed extends PluginClassDiscoveringPolicy
     {
         Fixed(@Nonnull Collection<String> names,
-              @Nonnull FixedClassAttributionProvider provider)
+              @Nonnull FixedClassAttributionProcessor processor)
         {
             super(Type.FIXED);
 
-            this.names = Objects.requireNonNull(names, "names");
-            this.provider = Objects.requireNonNull(provider, "provider");
+            this.names = new ArrayList<>(names);
+            this.processor = Objects.requireNonNull(processor, "processor");
         }
 
         public @Nonnull Collection<String> getClassNames()
@@ -70,24 +76,24 @@ public abstract class PluginClassDiscoveringPolicy {
                         Jam2Util.fromCanonicalToInternalName(name));
 
                 source.getEntry(sourceName).ifPresent(
-                        (entry) -> provider.provide(workflow, name, entry));
+                        (entry) -> processor.provide(workflow, name, entry));
             }
 
             return workflow.buildAll();
         }
 
-        private final FixedClassAttributionProvider provider;
+        private final FixedClassAttributionProcessor processor;
 
         private final Collection<String> names;
     }
 
     public static class Configurated extends PluginClassDiscoveringPolicy
     {
-        Configurated(@Nonnull ConfiguratedAttributionProvider provider)
+        Configurated(@Nonnull ConfiguratedAttributionProcessor processor)
         {
             super(Type.CONFIGURATED);
 
-            this.provider = provider;
+            this.processor = Objects.requireNonNull(processor);
         }
 
         @Override
@@ -97,13 +103,135 @@ public abstract class PluginClassDiscoveringPolicy {
         {
             AttributionWorkflow workflow = new AttributionWorkflow(context);
 
-            provider.provide(workflow, source);
+            processor.provide(workflow, source);
 
             return workflow.buildAll();
         }
 
-        private final ConfiguratedAttributionProvider provider;
+        private final ConfiguratedAttributionProcessor processor;
     }
 
-    // TODO
+    public static class ConfigurationFiles extends PluginClassDiscoveringPolicy
+    {
+        ConfigurationFiles(@Nonnull Collection<String> files,
+                           @Nonnull ConfigurationFileAttributionProcessor processor)
+        {
+            super(Type.CONFIGURATION_FILES);
+
+            this.files = new ArrayList<>(files);
+            this.processor = Objects.requireNonNull(processor, "processor");
+        }
+
+        @Override
+        public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
+                                                             @Nonnull PluginSource source)
+                throws IOException
+        {
+            AttributionWorkflow workflow = new AttributionWorkflow(context);
+
+            for (String file : files)
+                source.getEntry(file).ifPresent((entry) -> processor.provide(workflow, entry));
+
+            return workflow.buildAll();
+        }
+
+        private final Collection<String> files;
+
+        private final ConfigurationFileAttributionProcessor processor;
+    }
+
+    public static class ScanAnnotations extends PluginClassDiscoveringPolicy
+    {
+        ScanAnnotations(@Nonnull Collection<Class<? extends Annotation>> annotationTypes,
+                        @Nonnull AnnotationScanAttributionProcessor processor)
+        {
+            super(Type.SCAN_ANNOTATIONS);
+
+            this.annotationTypes = new ArrayList<>(annotationTypes);
+            this.processor = Objects.requireNonNull(processor, "processor");
+        }
+
+        @Override
+        public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
+                                                             @Nonnull PluginSource source)
+                throws IOException
+        {
+            AttributionWorkflow workflow = new AttributionWorkflow(context);
+
+            for (PluginSourceEntry entry :
+                    source.getEntries((SourceEntryNameFilter) name -> name.endsWith(".class")))
+            {
+                try {
+                    ClassReader reader = new ClassReader(entry.getBytes());
+                    ClassNode classNode = new ClassNode();
+
+                    reader.accept(classNode, 0);
+
+                    for (Class<? extends Annotation> annotationType : annotationTypes)
+                        Annotations.getAnnotationNode(classNode, annotationType).ifPresent(
+                                node -> processor.process(workflow, annotationType, node, entry));
+
+                } catch (IOException e) {
+                    throw e;
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+
+            return workflow.buildAll();
+        }
+
+        private final Collection<Class<? extends Annotation>> annotationTypes;
+
+        private final AnnotationScanAttributionProcessor processor;
+    }
+
+    public static class ScanSubclasses extends PluginClassDiscoveringPolicy
+    {
+        ScanSubclasses(@Nonnull Collection<Class<?>> superclasses,
+                       @Nonnull SubclassScanAttributionProcessor processor)
+        {
+            super(Type.SCAN_SUBCLASSES);
+
+            this.superclasses = new HashMap<>();
+            this.processor = Objects.requireNonNull(processor, "processor");
+
+            for (Class<?> superclass : superclasses)
+                this.superclasses.put(Jam2Util.toInternalName(superclass), superclass);
+        }
+
+        @Override
+        public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context, @Nonnull PluginSource source)
+                throws IOException
+        {
+            AttributionWorkflow workflow = new AttributionWorkflow(context);
+
+            for (PluginSourceEntry entry :
+                    source.getEntries((SourceEntryNameFilter) name -> name.endsWith(".class")))
+            {
+                try {
+                    ClassReader reader = new ClassReader(entry.getBytes());
+                    ClassNode classNode = new ClassNode();
+
+                    reader.accept(classNode, 0);
+
+                    Class<?> superclass;
+                    if (classNode.superName != null
+                            && (superclass = superclasses.get(classNode.superName)) != null)
+                        processor.process(workflow, superclass, entry);
+
+                } catch (IOException e) {
+                    throw e;
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+
+            return workflow.buildAll();
+        }
+
+        private final Map<String, Class<?>> superclasses;
+
+        private final SubclassScanAttributionProcessor processor;
+    }
 }
