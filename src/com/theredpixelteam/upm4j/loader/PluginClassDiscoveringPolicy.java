@@ -32,6 +32,21 @@ public abstract class PluginClassDiscoveringPolicy {
         return type;
     }
 
+    public static @Nonnull PluginClassDiscoveringPolicy
+        ofFixedClasses(@Nonnull Collection<String> classNames,
+                       @Nonnull FixedClassAttributionProcessor processor)
+    {
+        return new Fixed(classNames, processor);
+    }
+
+    public static @Nonnull PluginClassDiscoveringPolicy
+        ofConfigurated(@Nonnull ConfiguratedAttributionProcessor processor)
+    {
+        return new Configurated(processor);
+    }
+
+
+
     // TODO
 
     private final Type type;
@@ -42,7 +57,8 @@ public abstract class PluginClassDiscoveringPolicy {
         CONFIGURATED,
         CONFIGURATION_FILES,
         SCAN_ANNOTATIONS,
-        SCAN_SUBCLASSES
+        SCAN_SUBCLASSES,
+        CUSTOM
     }
 
     public static class Fixed extends PluginClassDiscoveringPolicy
@@ -233,5 +249,29 @@ public abstract class PluginClassDiscoveringPolicy {
         private final Map<String, Class<?>> superclasses;
 
         private final SubclassScanAttributionProcessor processor;
+    }
+
+    public static class Custom extends PluginClassDiscoveringPolicy
+    {
+        Custom(@Nonnull CustomAttributionProcessor processor)
+        {
+            super(Type.CUSTOM);
+
+            this.processor = Objects.requireNonNull(processor);
+        }
+
+        @Override
+        public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
+                                                             @Nonnull PluginSource source)
+                throws IOException
+        {
+            AttributionWorkflow workflow = new AttributionWorkflow(context);
+
+            processor.process(workflow, source);
+
+            return workflow.buildAll();
+        }
+
+        private final CustomAttributionProcessor processor;
     }
 }
