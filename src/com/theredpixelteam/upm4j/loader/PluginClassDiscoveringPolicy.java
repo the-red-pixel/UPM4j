@@ -45,9 +45,32 @@ public abstract class PluginClassDiscoveringPolicy {
         return new Configurated(processor);
     }
 
+    public static @Nonnull PluginClassDiscoveringPolicy
+        ofConfigurationFiles(@Nonnull Collection<String> files,
+                             @Nonnull ConfigurationFileAttributionProcessor processor)
+    {
+        return new ConfigurationFiles(files, processor);
+    }
 
+    public static @Nonnull PluginClassDiscoveringPolicy
+        ofScanAnnotations(@Nonnull Collection<Class<? extends Annotation>> annotations,
+                          @Nonnull AnnotationScanAttributionProcessor processor)
+    {
+        return new ScanAnnotations(annotations, processor);
+    }
 
-    // TODO
+    public static @Nonnull PluginClassDiscoveringPolicy
+        ofScanSubclasses(@Nonnull Collection<Class<?>> superclasses,
+                         @Nonnull SubclassScanAttributionProcessor processor)
+    {
+        return new ScanSubclasses(superclasses, processor);
+    }
+
+    public static @Nonnull PluginClassDiscoveringPolicy
+        ofCustom(@Nonnull CustomAttributionProcessor processor)
+    {
+        return new Custom(processor);
+    }
 
     private final Type type;
 

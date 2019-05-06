@@ -1,4 +1,4 @@
-package com.theredpixelteam.upm4j.url;
+package com.theredpixelteam.upm4j.url.heap;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.ByteArrayInputStream;
@@ -8,8 +8,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ThreadSafe
-public class InMemoryResources {
-    public InMemoryResources()
+public class HeapResources {
+    public HeapResources()
     {
     }
 
@@ -48,5 +48,5 @@ public class InMemoryResources {
         return resources;
     }
 
-    private final Map<String, byte[]> resources = new ConcurrentHashMap<>();
+    protected final Map<String, byte[]> resources = new ConcurrentHashMap<>();
 }

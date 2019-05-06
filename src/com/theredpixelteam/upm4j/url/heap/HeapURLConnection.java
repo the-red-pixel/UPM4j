@@ -1,12 +1,12 @@
-package com.theredpixelteam.upm4j.url;
+package com.theredpixelteam.upm4j.url.heap;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-public class InMemoryURLConnection extends URLConnection {
-    protected InMemoryURLConnection(InMemoryResources resources, URL url)
+public class HeapURLConnection extends URLConnection {
+    protected HeapURLConnection(HeapResources resources, URL url)
     {
         super(url);
         this.resources = resources;
@@ -49,5 +49,5 @@ public class InMemoryURLConnection extends URLConnection {
                 .orElseThrow(() -> new IOException("No such in-memory resource: " + url.getPath().substring(1)));
     }
 
-    private final InMemoryResources resources;
+    private final HeapResources resources;
 }
