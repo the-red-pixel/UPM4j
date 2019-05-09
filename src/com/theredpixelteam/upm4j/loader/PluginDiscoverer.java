@@ -2,8 +2,10 @@ package com.theredpixelteam.upm4j.loader;
 
 import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.loader.source.PluginSource;
+import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 
 import javax.annotation.Nonnull;
+import java.util.Collection;
 import java.util.Objects;
 
 public class PluginDiscoverer {
