@@ -2,10 +2,8 @@ package com.theredpixelteam.upm4j.loader;
 
 import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.loader.source.PluginSource;
-import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 
 import javax.annotation.Nonnull;
-import java.util.Collection;
 import java.util.Objects;
 
 public class PluginDiscoverer {
@@ -48,8 +46,6 @@ public class PluginDiscoverer {
 
     public void discover()
     {
-        boolean single = !PluginInstanceDiscoveringPolicy.SINGLE.equals(instancePolicy);
-        boolean restricted = PluginInstanceDiscoveringPolicy.RESTRICTED_SINGLE.equals(instancePolicy);
 
         // TODO
     }

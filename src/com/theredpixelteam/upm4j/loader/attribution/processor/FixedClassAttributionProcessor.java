@@ -1,5 +1,6 @@
 package com.theredpixelteam.upm4j.loader.attribution.processor;
 
+import com.theredpixelteam.upm4j.loader.PluginClassDiscoveringPolicy;
 import com.theredpixelteam.upm4j.loader.attribution.AttributionWorkflow;
 import com.theredpixelteam.upm4j.loader.source.PluginSourceEntry;
 
@@ -9,6 +10,7 @@ import java.io.IOException;
 public interface FixedClassAttributionProcessor {
     public void provide(@Nonnull AttributionWorkflow workflow,
                         @Nonnull String className,
-                        @Nonnull PluginSourceEntry sourceEntry)
+                        @Nonnull PluginSourceEntry sourceEntry,
+                        @Nonnull PluginClassDiscoveringPolicy.Barrier barrier)
             throws IOException;
 }

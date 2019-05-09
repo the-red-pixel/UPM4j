@@ -1,5 +1,6 @@
 package com.theredpixelteam.upm4j.loader.attribution.processor;
 
+import com.theredpixelteam.upm4j.loader.PluginClassDiscoveringPolicy;
 import com.theredpixelteam.upm4j.loader.attribution.AttributionWorkflow;
 import com.theredpixelteam.upm4j.loader.source.PluginSourceEntry;
 
@@ -9,6 +10,7 @@ import java.io.IOException;
 public interface SubclassScanAttributionProcessor {
     public void process(@Nonnull AttributionWorkflow workflow,
                         @Nonnull Class<?> superclass,
-                        @Nonnull PluginSourceEntry entry)
+                        @Nonnull PluginSourceEntry entry,
+                        @Nonnull PluginClassDiscoveringPolicy.Barrier barrier)
             throws IOException;
 }

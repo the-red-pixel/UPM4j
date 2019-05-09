@@ -83,6 +83,13 @@ public abstract class PluginClassDiscoveringPolicy {
         return new Barrier(maxCount);
     }
 
+    static void requireNonNull(UPMContext context, PluginSource source, Barrier barrier)
+    {
+        Objects.requireNonNull(context, "context");
+        Objects.requireNonNull(source, "source");
+        Objects.requireNonNull(barrier, "barrier");
+    }
+
     private final Type type;
 
     public static enum Type
@@ -112,21 +119,25 @@ public abstract class PluginClassDiscoveringPolicy {
         }
 
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
-                                                             @Nonnull PluginSource source)
+                                                             @Nonnull PluginSource source,
+                                                             @Nonnull Barrier barrier)
                 throws IOException
         {
-            Objects.requireNonNull(source);
+            requireNonNull(context, source, barrier);
 
             AttributionWorkflow workflow = new AttributionWorkflow(context);
 
             for (String name : names)
             {
+                if (barrier.isBlocked())
+                    break;
+
                 String sourceName =
                         Jam2Util.fromInternalNameToResource(
                         Jam2Util.fromCanonicalToInternalName(name));
 
                 source.getEntry(sourceName).ifPresent(
-                        (entry) -> processor.provide(workflow, name, entry));
+                        (entry) -> processor.provide(workflow, name, entry, barrier));
             }
 
             return workflow.buildAll();
@@ -148,12 +159,15 @@ public abstract class PluginClassDiscoveringPolicy {
 
         @Override
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
-                                                             @Nonnull PluginSource source)
+                                                             @Nonnull PluginSource source,
+                                                             @Nonnull Barrier barrier)
                 throws IOException
         {
+            requireNonNull(context, source, barrier);
+
             AttributionWorkflow workflow = new AttributionWorkflow(context);
 
-            processor.provide(workflow, source);
+            processor.provide(workflow, source, barrier);
 
             return workflow.buildAll();
         }
@@ -174,13 +188,21 @@ public abstract class PluginClassDiscoveringPolicy {
 
         @Override
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
-                                                             @Nonnull PluginSource source)
+                                                             @Nonnull PluginSource source,
+                                                             @Nonnull Barrier barrier)
                 throws IOException
         {
+            requireNonNull(context, source, barrier);
+
             AttributionWorkflow workflow = new AttributionWorkflow(context);
 
             for (String file : files)
-                source.getEntry(file).ifPresent((entry) -> processor.provide(workflow, entry));
+            {
+                if (barrier.isBlocked())
+                    break;
+
+                source.getEntry(file).ifPresent((entry) -> processor.provide(workflow, entry, barrier));
+            }
 
             return workflow.buildAll();
         }
@@ -203,14 +225,20 @@ public abstract class PluginClassDiscoveringPolicy {
 
         @Override
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
-                                                             @Nonnull PluginSource source)
+                                                             @Nonnull PluginSource source,
+                                                             @Nonnull Barrier barrier)
                 throws IOException
         {
+            requireNonNull(context, source, barrier);
+
             AttributionWorkflow workflow = new AttributionWorkflow(context);
 
-            for (PluginSourceEntry entry :
+            L: for (PluginSourceEntry entry :
                     source.getEntries((SourceEntryNameFilter) name -> name.endsWith(".class")))
             {
+                if (barrier.isBlocked())
+                    break;
+
                 try {
                     ClassReader reader = new ClassReader(entry.getBytes());
                     ClassNode classNode = new ClassNode();
@@ -218,8 +246,13 @@ public abstract class PluginClassDiscoveringPolicy {
                     reader.accept(classNode, 0);
 
                     for (Class<? extends Annotation> annotationType : annotationTypes)
+                    {
                         Annotations.getAnnotationNode(classNode, annotationType).ifPresent(
-                                node -> processor.process(workflow, annotationType, node, entry));
+                                node -> processor.process(workflow, annotationType, node, entry, barrier));
+
+                        if (barrier.isBlocked())
+                            break L;
+                    }
 
                 } catch (IOException e) {
                     throw e;
@@ -251,14 +284,21 @@ public abstract class PluginClassDiscoveringPolicy {
         }
 
         @Override
-        public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context, @Nonnull PluginSource source)
+        public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
+                                                             @Nonnull PluginSource source,
+                                                             @Nonnull Barrier barrier)
                 throws IOException
         {
+            requireNonNull(context, source, barrier);
+
             AttributionWorkflow workflow = new AttributionWorkflow(context);
 
-            for (PluginSourceEntry entry :
+            L: for (PluginSourceEntry entry :
                     source.getEntries((SourceEntryNameFilter) name -> name.endsWith(".class")))
             {
+                if (barrier.isBlocked())
+                    break;
+
                 try {
                     ClassReader reader = new ClassReader(entry.getBytes());
                     ClassNode classNode = new ClassNode();
@@ -268,7 +308,7 @@ public abstract class PluginClassDiscoveringPolicy {
                     Class<?> superclass;
                     if (classNode.superName != null
                             && (superclass = superclasses.get(classNode.superName)) != null)
-                        processor.process(workflow, superclass, entry);
+                        processor.process(workflow, superclass, entry, barrier);
 
                 } catch (IOException e) {
                     throw e;
@@ -296,12 +336,15 @@ public abstract class PluginClassDiscoveringPolicy {
 
         @Override
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
-                                                             @Nonnull PluginSource source)
+                                                             @Nonnull PluginSource source,
+                                                             @Nonnull Barrier barrier)
                 throws IOException
         {
+            requireNonNull(context, source, barrier);
+
             AttributionWorkflow workflow = new AttributionWorkflow(context);
 
-            processor.process(workflow, source);
+            processor.process(workflow, source, barrier);
 
             return workflow.buildAll();
         }
