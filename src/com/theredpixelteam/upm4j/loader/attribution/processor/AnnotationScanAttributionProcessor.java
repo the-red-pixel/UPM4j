@@ -1,6 +1,5 @@
 package com.theredpixelteam.upm4j.loader.attribution.processor;
 
-import com.theredpixelteam.upm4j.loader.PluginClassDiscoveringPolicy;
 import com.theredpixelteam.upm4j.loader.attribution.AttributionWorkflow;
 import com.theredpixelteam.upm4j.loader.source.PluginSourceEntry;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -14,6 +13,6 @@ public interface AnnotationScanAttributionProcessor {
                         @Nonnull Class<? extends Annotation> annotationType,
                         @Nonnull AnnotationNode annotationNode,
                         @Nonnull PluginSourceEntry entry,
-                        @Nonnull PluginClassDiscoveringPolicy.Barrier barrier)
+                        @Nonnull Barrier barrier)
             throws IOException;
 }
