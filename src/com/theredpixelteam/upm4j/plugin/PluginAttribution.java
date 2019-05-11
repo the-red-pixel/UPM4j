@@ -34,6 +34,11 @@ public class PluginAttribution {
         return Optional.ofNullable(this.name);
     }
 
+    public @Nonnull String getMainClass()
+    {
+        return mainClass;
+    }
+
     public @Nonnull Optional<String> getVersion()
     {
         return Optional.ofNullable(this.version);

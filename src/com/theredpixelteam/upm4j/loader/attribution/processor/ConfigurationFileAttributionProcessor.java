@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 
 public interface ConfigurationFileAttributionProcessor {
-    public void provide(@Nonnull AttributionWorkflow workflow,
+    public void process(@Nonnull AttributionWorkflow workflow,
                         @Nonnull PluginSourceEntry fileEntry,
                         @Nonnull Barrier barrier)
             throws IOException;

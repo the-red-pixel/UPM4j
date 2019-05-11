@@ -15,8 +15,8 @@ public class PluginDiscoverer {
         this.source = Objects.requireNonNull(source, "source");
         this.classLoader = context.getClassLoaderProvider().provide();
 
-        this.classPolicy = context.getClassDiscoveringPolicy();
-        this.instancePolicy = context.getInstanceDiscoveringPolicy();
+        this.entryDiscoverer = context.getEntryDiscoverer();
+        this.instancePolicy = context.getInstancePolicy();
     }
 
     public @Nonnull PluginSource getSource()
@@ -24,14 +24,16 @@ public class PluginDiscoverer {
         return source;
     }
 
-    public @Nonnull PluginInstanceDiscoveringPolicy getInstancePolicy()
+    public @Nonnull
+    PluginInstancePolicy getInstancePolicy()
     {
         return instancePolicy;
     }
 
-    public @Nonnull PluginClassDiscoveringPolicy getClassPolicy()
+    public @Nonnull
+    PluginEntryDiscoverer getEntryDiscoverer()
     {
-        return classPolicy;
+        return entryDiscoverer;
     }
 
     public @Nonnull UPMClassLoader getClassLoader()
@@ -52,9 +54,9 @@ public class PluginDiscoverer {
 
     private final PluginSource source;
 
-    private final PluginInstanceDiscoveringPolicy instancePolicy;
+    private final PluginInstancePolicy instancePolicy;
 
-    private final PluginClassDiscoveringPolicy classPolicy;
+    private final PluginEntryDiscoverer entryDiscoverer;
 
     private final UPMClassLoader classLoader;
 

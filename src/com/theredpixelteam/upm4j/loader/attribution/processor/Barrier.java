@@ -44,12 +44,6 @@ public class Barrier {
             block();
     }
 
-    public void clear()
-    {
-        count = 0;
-        blocked = false;
-    }
-
     public boolean isBlocked()
     {
         return blocked;
@@ -77,6 +71,17 @@ public class Barrier {
     public @Nonnull Optional<Object> getAttachment(@Nonnull Object key)
     {
         return Optional.ofNullable(attachments.get(Objects.requireNonNull(key)));
+    }
+
+    @SuppressWarnings("unchecked")
+    public @Nonnull <T> Optional<T> getAttachment(@Nonnull Object key, Class<T> type)
+    {
+        Object att = attachments.get(key);
+
+        if (type.isInstance(att))
+            return Optional.of((T) att);
+
+        return Optional.empty();
     }
 
     private int count;

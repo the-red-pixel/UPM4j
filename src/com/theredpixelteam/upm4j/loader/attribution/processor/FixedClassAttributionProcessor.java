@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 
 public interface FixedClassAttributionProcessor {
-    public void provide(@Nonnull AttributionWorkflow workflow,
+    public void process(@Nonnull AttributionWorkflow workflow,
                         @Nonnull String className,
                         @Nonnull PluginSourceEntry sourceEntry,
                         @Nonnull Barrier barrier)

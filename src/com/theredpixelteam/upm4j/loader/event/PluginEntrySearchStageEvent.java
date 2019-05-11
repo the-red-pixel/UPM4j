@@ -2,8 +2,9 @@ package com.theredpixelteam.upm4j.loader.event;
 
 import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.event.UPMEvent;
-import com.theredpixelteam.upm4j.loader.PluginClassDiscoveringPolicy;
+import com.theredpixelteam.upm4j.loader.PluginEntryDiscoverer;
 import com.theredpixelteam.upm4j.loader.attribution.processor.Barrier;
+import com.theredpixelteam.upm4j.loader.source.PluginSource;
 import com.theredpixelteam.upm4j.loader.source.PluginSourceEntry;
 import org.objectweb.asm.tree.AnnotationNode;
 
@@ -12,13 +13,15 @@ import java.lang.annotation.Annotation;
 import java.util.Objects;
 
 public abstract class PluginEntrySearchStageEvent implements UPMEvent {
-    PluginEntrySearchStageEvent(@Nonnull UPMContext context,
-                                @Nonnull PluginClassDiscoveringPolicy policy,
-                                @Nonnull Barrier barrier)
+    protected PluginEntrySearchStageEvent(@Nonnull UPMContext context,
+                                          @Nonnull PluginSource source,
+                                          @Nonnull PluginEntryDiscoverer policy,
+                                          @Nonnull Barrier barrier)
     {
         this.context = Objects.requireNonNull(context, "context");
         this.policy = Objects.requireNonNull(policy, "policy");
         this.barrier = Objects.requireNonNull(barrier, "barrier");
+        this.source = Objects.requireNonNull(source, "source");
     }
 
     @Override
@@ -27,31 +30,38 @@ public abstract class PluginEntrySearchStageEvent implements UPMEvent {
         return context;
     }
 
-    public @Nonnull PluginClassDiscoveringPolicy getPolicy()
+    public @Nonnull PluginEntryDiscoverer getDiscoverer()
     {
         return policy;
     }
 
-    public @Nonnull
-    Barrier getBarrier()
+    public @Nonnull Barrier getBarrier()
     {
         return barrier;
     }
 
+    public @Nonnull PluginSource getSource()
+    {
+        return source;
+    }
+
     private final Barrier barrier;
 
-    private final PluginClassDiscoveringPolicy policy;
+    private final PluginEntryDiscoverer policy;
 
     private final UPMContext context;
+
+    private final PluginSource source;
 
     static class CancellablePluginEntrySearchStageEvent extends PluginEntrySearchStageEvent
         implements Cancellable
     {
         CancellablePluginEntrySearchStageEvent(@Nonnull UPMContext context,
-                                               @Nonnull PluginClassDiscoveringPolicy policy,
+                                               @Nonnull PluginSource source,
+                                               @Nonnull PluginEntryDiscoverer policy,
                                                @Nonnull Barrier barrier)
         {
-            super(context, policy, barrier);
+            super(context, source, policy, barrier);
         }
 
         @Override
@@ -69,14 +79,15 @@ public abstract class PluginEntrySearchStageEvent implements UPMEvent {
         boolean cancelled;
     }
 
-    public static abstract class EntryEvent extends PluginEntrySearchStageEvent
+    public static abstract class AbstractEntryEvent extends PluginEntrySearchStageEvent
     {
-        EntryEvent(@Nonnull UPMContext context,
-                                     @Nonnull PluginClassDiscoveringPolicy policy,
+        protected AbstractEntryEvent(@Nonnull UPMContext context,
+                                     @Nonnull PluginSource source,
+                                     @Nonnull PluginEntryDiscoverer policy,
                                      @Nonnull Barrier barrier,
                                      @Nonnull PluginSourceEntry entry)
         {
-            super(context, policy, barrier);
+            super(context, source, policy, barrier);
             this.entry = Objects.requireNonNull(entry, "entry");
         }
 
@@ -88,14 +99,15 @@ public abstract class PluginEntrySearchStageEvent implements UPMEvent {
         private final PluginSourceEntry entry;
     }
 
-    public static abstract class CancellableEntryEvent extends CancellablePluginEntrySearchStageEvent
+    public static abstract class AbstractCancellableEntryEvent extends CancellablePluginEntrySearchStageEvent
     {
-        CancellableEntryEvent(@Nonnull UPMContext context,
-                                     @Nonnull PluginClassDiscoveringPolicy policy,
-                                     @Nonnull Barrier barrier,
-                                     @Nonnull PluginSourceEntry entry)
+        protected AbstractCancellableEntryEvent(@Nonnull UPMContext context,
+                                                @Nonnull PluginSource source,
+                                                @Nonnull PluginEntryDiscoverer policy,
+                                                @Nonnull Barrier barrier,
+                                                @Nonnull PluginSourceEntry entry)
         {
-            super(context, policy, barrier);
+            super(context, source, policy, barrier);
             this.entry = Objects.requireNonNull(entry, "entry");
         }
 
@@ -107,26 +119,73 @@ public abstract class PluginEntrySearchStageEvent implements UPMEvent {
         private final PluginSourceEntry entry;
     }
 
-    public static class EntryScan extends CancellableEntryEvent
+    public static class Start extends CancellablePluginEntrySearchStageEvent
+    {
+        public Start(@Nonnull UPMContext context,
+                     @Nonnull PluginSource source,
+                     @Nonnull PluginEntryDiscoverer policy,
+                     @Nonnull Barrier barrier)
+        {
+            super(context, source, policy, barrier);
+        }
+    }
+
+    public static class Cancelled extends PluginEntrySearchStageEvent
+    {
+        public Cancelled(@Nonnull UPMContext context,
+                         @Nonnull PluginSource source,
+                         @Nonnull PluginEntryDiscoverer policy,
+                         @Nonnull Barrier barrier)
+        {
+            super(context, source, policy, barrier);
+        }
+    }
+
+    public static class BlockedByBarrier extends PluginEntrySearchStageEvent
+    {
+        public BlockedByBarrier(@Nonnull UPMContext context,
+                                   @Nonnull PluginSource source,
+                                   @Nonnull PluginEntryDiscoverer policy,
+                                   @Nonnull Barrier barrier)
+        {
+            super(context, source, policy, barrier);
+        }
+    }
+
+    public static class EntryScan extends AbstractCancellableEntryEvent
     {
         public EntryScan(@Nonnull UPMContext context,
-                         @Nonnull PluginClassDiscoveringPolicy policy,
+                         @Nonnull PluginSource source,
+                         @Nonnull PluginEntryDiscoverer policy,
                          @Nonnull Barrier barrier,
                          @Nonnull PluginSourceEntry entry)
         {
-            super(context, policy, barrier, entry);
+            super(context, source, policy, barrier, entry);
         }
     }
 
-    public static class EntryScanException extends EntryEvent
+    public static class EntryCancelled extends AbstractEntryEvent
+    {
+        public EntryCancelled(@Nonnull UPMContext context,
+                              @Nonnull PluginSource source,
+                              @Nonnull PluginEntryDiscoverer policy,
+                              @Nonnull Barrier barrier,
+                              @Nonnull PluginSourceEntry entry)
+        {
+            super(context, source, policy, barrier, entry);
+        }
+    }
+
+    public static class EntryScanException extends AbstractEntryEvent
     {
         public EntryScanException(@Nonnull UPMContext context,
-                                  @Nonnull PluginClassDiscoveringPolicy policy,
+                                  @Nonnull PluginSource source,
+                                  @Nonnull PluginEntryDiscoverer policy,
                                   @Nonnull Barrier barrier,
                                   @Nonnull PluginSourceEntry entry,
                                   @Nonnull Exception cause)
         {
-            super(context, policy, barrier, entry);
+            super(context, source, policy, barrier, entry);
             this.cause = Objects.requireNonNull(cause, "cause");
         }
 
@@ -138,15 +197,28 @@ public abstract class PluginEntrySearchStageEvent implements UPMEvent {
         private final Exception cause;
     }
 
-    public static class ClassEntryFound extends CancellableEntryEvent
+    public static class EntryFound extends AbstractCancellableEntryEvent
+    {
+        public EntryFound(@Nonnull UPMContext context,
+                          @Nonnull PluginSource source,
+                          @Nonnull PluginEntryDiscoverer policy,
+                          @Nonnull Barrier barrier,
+                          @Nonnull PluginSourceEntry entry)
+        {
+            super(context, source, policy, barrier, entry);
+        }
+    }
+
+    public static class ClassEntryFound extends AbstractCancellableEntryEvent
     {
         public ClassEntryFound(@Nonnull UPMContext context,
-                               @Nonnull PluginClassDiscoveringPolicy policy,
+                               @Nonnull PluginSource source,
+                               @Nonnull PluginEntryDiscoverer policy,
                                @Nonnull Barrier barrier,
-                               @Nonnull PluginSourceEntry entry,
-                               @Nonnull String className)
+                               @Nonnull String className,
+                               @Nonnull PluginSourceEntry entry)
         {
-            super(context, policy, barrier, entry);
+            super(context, source, policy, barrier, entry);
             this.className = Objects.requireNonNull(className, "classname");
         }
 
@@ -158,27 +230,29 @@ public abstract class PluginEntrySearchStageEvent implements UPMEvent {
         private final String className;
     }
 
-    public static class ConfigurationEntryFound extends CancellableEntryEvent
+    public static class ConfigurationEntryFound extends AbstractCancellableEntryEvent
     {
         public ConfigurationEntryFound(@Nonnull UPMContext context,
-                                       @Nonnull PluginClassDiscoveringPolicy policy,
+                                       @Nonnull PluginSource source,
+                                       @Nonnull PluginEntryDiscoverer policy,
                                        @Nonnull Barrier barrier,
                                        @Nonnull PluginSourceEntry entry)
         {
-            super(context, policy, barrier, entry);
+            super(context, source, policy, barrier, entry);
         }
     }
 
-    public static class AnnotationEntryFound extends CancellableEntryEvent
+    public static class AnnotationEntryFound extends AbstractCancellableEntryEvent
     {
         public AnnotationEntryFound(@Nonnull UPMContext context,
-                                    @Nonnull PluginClassDiscoveringPolicy policy,
+                                    @Nonnull PluginSource source,
+                                    @Nonnull PluginEntryDiscoverer policy,
                                     @Nonnull Barrier barrier,
                                     @Nonnull PluginSourceEntry entry,
                                     @Nonnull Class<? extends Annotation> annotationType,
                                     @Nonnull AnnotationNode annotationNode)
         {
-            super(context, policy, barrier, entry);
+            super(context, source, policy, barrier, entry);
             this.annotationType = Objects.requireNonNull(annotationType, "annotationType");
             this.annotationNode = Objects.requireNonNull(annotationNode, "annotationNode");
         }
@@ -198,15 +272,16 @@ public abstract class PluginEntrySearchStageEvent implements UPMEvent {
         private final AnnotationNode annotationNode;
     }
 
-    public static class SubclassEntryFound extends CancellableEntryEvent
+    public static class SubclassEntryFound extends AbstractCancellableEntryEvent
     {
         public SubclassEntryFound(@Nonnull UPMContext context,
-                                  @Nonnull PluginClassDiscoveringPolicy policy,
+                                  @Nonnull PluginSource source,
+                                  @Nonnull PluginEntryDiscoverer policy,
                                   @Nonnull Barrier barrier,
                                   @Nonnull PluginSourceEntry entry,
                                   @Nonnull Class<?> superclass)
         {
-            super(context, policy, barrier, entry);
+            super(context, source, policy, barrier, entry);
             this.superclass = Objects.requireNonNull(superclass, "superclass");
         }
 
@@ -218,14 +293,15 @@ public abstract class PluginEntrySearchStageEvent implements UPMEvent {
         private final Class<?> superclass;
     }
 
-    public abstract static class EntryNotFoundEvent extends PluginEntrySearchStageEvent
+    public abstract static class AbstractEntryNotFoundEvent extends PluginEntrySearchStageEvent
     {
-        EntryNotFoundEvent(@Nonnull UPMContext context,
-                           @Nonnull PluginClassDiscoveringPolicy policy,
-                           @Nonnull Barrier barrier,
-                           @Nonnull String entryName)
+        protected AbstractEntryNotFoundEvent(@Nonnull UPMContext context,
+                                             @Nonnull PluginSource source,
+                                             @Nonnull PluginEntryDiscoverer policy,
+                                             @Nonnull Barrier barrier,
+                                             @Nonnull String entryName)
         {
-            super(context, policy, barrier);
+            super(context, source, policy, barrier);
             this.entryName = Objects.requireNonNull(entryName, "entryName");
         }
 
@@ -237,25 +313,243 @@ public abstract class PluginEntrySearchStageEvent implements UPMEvent {
         private final String entryName;
     }
 
-    public static class ClassEntryNotFound extends EntryNotFoundEvent
+    public static class EntryNotFound extends AbstractEntryNotFoundEvent
     {
-        public ClassEntryNotFound(@Nonnull UPMContext context,
-                                  @Nonnull PluginClassDiscoveringPolicy policy,
-                                  @Nonnull Barrier barrier,
-                                  @Nonnull String entryName)
+        public EntryNotFound(@Nonnull UPMContext context,
+                             @Nonnull PluginSource source,
+                             @Nonnull PluginEntryDiscoverer policy,
+                             @Nonnull Barrier barrier,
+                             @Nonnull String entryName)
         {
-            super(context, policy, barrier, entryName);
+            super(context, source, policy, barrier, entryName);
         }
     }
 
-    public static class ConfigurationEntryNotFound extends EntryNotFoundEvent
+    public static class ClassEntryNotFound extends AbstractEntryNotFoundEvent
+    {
+        public ClassEntryNotFound(@Nonnull UPMContext context,
+                                  @Nonnull PluginSource source,
+                                  @Nonnull PluginEntryDiscoverer policy,
+                                  @Nonnull Barrier barrier,
+                                  @Nonnull String entryName)
+        {
+            super(context, source, policy, barrier, entryName);
+        }
+    }
+
+    public static class ConfigurationEntryNotFound extends AbstractEntryNotFoundEvent
     {
         public ConfigurationEntryNotFound(@Nonnull UPMContext context,
-                                          @Nonnull PluginClassDiscoveringPolicy policy,
+                                          @Nonnull PluginSource source,
+                                          @Nonnull PluginEntryDiscoverer policy,
                                           @Nonnull Barrier barrier,
                                           @Nonnull String entryName)
         {
-            super(context, policy, barrier, entryName);
+            super(context, source, policy, barrier, entryName);
         }
+    }
+
+    public static class EntryIgnored extends AbstractEntryEvent
+    {
+        public EntryIgnored(@Nonnull UPMContext context,
+                            @Nonnull PluginSource source,
+                            @Nonnull PluginEntryDiscoverer policy,
+                            @Nonnull Barrier barrier,
+                            @Nonnull PluginSourceEntry entry)
+        {
+            super(context, source, policy, barrier, entry);
+        }
+    }
+
+    public static class EntryProcessCancelled extends AbstractEntryEvent
+    {
+        public EntryProcessCancelled(@Nonnull UPMContext context,
+                                     @Nonnull PluginSource source,
+                                     @Nonnull PluginEntryDiscoverer policy,
+                                     @Nonnull Barrier barrier,
+                                     @Nonnull PluginSourceEntry entry)
+        {
+            super(context, source, policy, barrier, entry);
+        }
+    }
+
+    public static class ClassEntryProcessCancelled extends AbstractEntryEvent
+    {
+        public ClassEntryProcessCancelled(@Nonnull UPMContext context,
+                                          @Nonnull PluginSource source,
+                                          @Nonnull PluginEntryDiscoverer policy,
+                                          @Nonnull Barrier barrier,
+                                          @Nonnull PluginSourceEntry entry,
+                                          @Nonnull String className)
+        {
+            super(context, source, policy, barrier, entry);
+            this.className = Objects.requireNonNull(className, "classname");
+        }
+
+        public @Nonnull String getClassName()
+        {
+            return className;
+        }
+
+        private final String className;
+    }
+
+    public static class ConfigurationEntryProcessCancelled extends AbstractEntryEvent
+    {
+        public ConfigurationEntryProcessCancelled(@Nonnull UPMContext context,
+                                                  @Nonnull PluginSource source,
+                                                  @Nonnull PluginEntryDiscoverer policy,
+                                                  @Nonnull Barrier barrier,
+                                                  @Nonnull PluginSourceEntry entry)
+        {
+            super(context, source, policy, barrier, entry);
+        }
+    }
+
+    public static class AnnotationEntryProcessCancelled extends AbstractEntryEvent
+    {
+        public AnnotationEntryProcessCancelled(@Nonnull UPMContext context,
+                                               @Nonnull PluginSource source,
+                                               @Nonnull PluginEntryDiscoverer policy,
+                                               @Nonnull Barrier barrier,
+                                               @Nonnull PluginSourceEntry entry,
+                                               @Nonnull Class<? extends Annotation> annotationType,
+                                               @Nonnull AnnotationNode annotationNode)
+        {
+            super(context, source, policy, barrier, entry);
+            this.annotationType = Objects.requireNonNull(annotationType, "annotationType");
+            this.annotationNode = Objects.requireNonNull(annotationNode, "annotationNode");
+        }
+
+        public @Nonnull Class<? extends Annotation> getAnnotationType()
+        {
+            return annotationType;
+        }
+
+        public @Nonnull AnnotationNode getAnnotationNode()
+        {
+            return annotationNode;
+        }
+
+        private final AnnotationNode annotationNode;
+
+        private final Class<? extends Annotation> annotationType;
+    }
+
+    public static class SubclassEntryProcessCancelled extends AbstractEntryEvent
+    {
+        public SubclassEntryProcessCancelled(@Nonnull UPMContext context,
+                                             @Nonnull PluginSource source,
+                                             @Nonnull PluginEntryDiscoverer policy,
+                                             @Nonnull Barrier barrier,
+                                             @Nonnull PluginSourceEntry entry,
+                                             @Nonnull Class<?> superclass)
+        {
+            super(context, source, policy, barrier, entry);
+            this.superclass = Objects.requireNonNull(superclass, "superclass");
+        }
+
+        public @Nonnull Class<?> getSuperclass()
+        {
+            return superclass;
+        }
+
+        private final Class<?> superclass;
+    }
+
+    public static class EntryProcessPassed extends AbstractEntryEvent
+    {
+        public EntryProcessPassed(@Nonnull UPMContext context,
+                                  @Nonnull PluginSource source,
+                                  @Nonnull PluginEntryDiscoverer policy,
+                                  @Nonnull Barrier barrier, @Nonnull PluginSourceEntry entry)
+        {
+            super(context, source, policy, barrier, entry);
+        }
+    }
+
+    public static class ClassEntryProcessPassed extends AbstractEntryEvent
+    {
+
+        public ClassEntryProcessPassed(@Nonnull UPMContext context,
+                                       @Nonnull PluginSource source,
+                                       @Nonnull PluginEntryDiscoverer policy,
+                                       @Nonnull Barrier barrier,
+                                       @Nonnull PluginSourceEntry entry,
+                                       @Nonnull String className)
+        {
+            super(context, source, policy, barrier, entry);
+            this.className = Objects.requireNonNull(className, "classname");
+        }
+
+        public @Nonnull String getClassName()
+        {
+            return className;
+        }
+
+        private final String className;
+    }
+
+    public static class ConfigurationEntryProcessPassed extends AbstractEntryEvent
+    {
+        public ConfigurationEntryProcessPassed(@Nonnull UPMContext context,
+                                               @Nonnull PluginSource source,
+                                               @Nonnull PluginEntryDiscoverer policy,
+                                               @Nonnull Barrier barrier,
+                                               @Nonnull PluginSourceEntry entry)
+        {
+            super(context, source, policy, barrier, entry);
+        }
+    }
+
+    public static class AnnotationEntryProcessPassed extends AbstractEntryEvent
+    {
+        public AnnotationEntryProcessPassed(@Nonnull UPMContext context,
+                                            @Nonnull PluginSource source,
+                                            @Nonnull PluginEntryDiscoverer policy,
+                                            @Nonnull Barrier barrier,
+                                            @Nonnull PluginSourceEntry entry,
+                                            @Nonnull Class<? extends Annotation> annotationType,
+                                            @Nonnull AnnotationNode annotationNode)
+        {
+            super(context, source, policy, barrier, entry);
+            this.annotationType = Objects.requireNonNull(annotationType, "annotationType");
+            this.annotationNode = Objects.requireNonNull(annotationNode, "annotationNode");
+        }
+
+        public @Nonnull Class<? extends Annotation> getAnnotationType()
+        {
+            return annotationType;
+        }
+
+        public @Nonnull AnnotationNode getAnnotationNode()
+        {
+            return annotationNode;
+        }
+
+        private final AnnotationNode annotationNode;
+
+        private final Class<? extends Annotation> annotationType;
+    }
+
+    public static class SubclassEntryProcessPassed extends AbstractEntryEvent
+    {
+        public SubclassEntryProcessPassed(@Nonnull UPMContext context,
+                                          @Nonnull PluginSource source,
+                                          @Nonnull PluginEntryDiscoverer policy,
+                                          @Nonnull Barrier barrier,
+                                          @Nonnull PluginSourceEntry entry,
+                                          @Nonnull Class<?> superclass)
+        {
+            super(context, source, policy, barrier, entry);
+            this.superclass = Objects.requireNonNull(superclass, "superclass");
+        }
+
+        public @Nonnull Class<?> getSuperclass()
+        {
+            return superclass;
+        }
+
+        private final Class<?> superclass;
     }
 }
