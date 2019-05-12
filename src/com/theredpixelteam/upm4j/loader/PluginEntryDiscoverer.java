@@ -580,6 +580,7 @@ public abstract class PluginEntryDiscoverer {
                         postEntryIgnored(context, source, this, barrier, entry);
 
                 } catch (IOException e) {
+                    barrier.block();
                     throw e;
                 } catch (Exception e) {
                     postEntryScanException(context, source, this, barrier, entry, e);
@@ -677,6 +678,7 @@ public abstract class PluginEntryDiscoverer {
                         postEntryIgnored(context, source, this, barrier, entry);
 
                 } catch (IOException e) {
+                    barrier.block();
                     throw e;
                 } catch (Exception e) {
                     postEntryScanException(context, source, this, barrier, entry, e);

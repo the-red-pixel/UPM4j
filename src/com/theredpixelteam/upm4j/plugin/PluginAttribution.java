@@ -1,11 +1,14 @@
 package com.theredpixelteam.upm4j.plugin;
 
+import com.theredpixelteam.upm4j.loader.source.SourceEntry;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
 public class PluginAttribution {
     PluginAttribution(@Nonnull String mainClass,
+                      @Nonnull SourceEntry mainEntry,
                       @Nonnull String identity,
                       @Nullable String name,
                       @Nullable String version,
@@ -15,6 +18,7 @@ public class PluginAttribution {
                       @Nonnull Map<String, Object> extraAttributions)
     {
         this.mainClass = Objects.requireNonNull(mainClass, "mainClass");
+        this.mainEntry = Objects.requireNonNull(mainEntry, "mainEntry");
         this.identity = Objects.requireNonNull(identity, "identity");
         this.name = name;
         this.version = version;
@@ -37,6 +41,11 @@ public class PluginAttribution {
     public @Nonnull String getMainClass()
     {
         return mainClass;
+    }
+
+    public @Nonnull SourceEntry getMainEntry()
+    {
+        return mainEntry;
     }
 
     public @Nonnull Optional<String> getVersion()
@@ -87,6 +96,8 @@ public class PluginAttribution {
     }
 
     private final String mainClass;
+
+    private final SourceEntry mainEntry;
 
     private final String name;
 
@@ -144,6 +155,12 @@ public class PluginAttribution {
             return this;
         }
 
+        public @Nonnull Builder mainEntry(@Nullable SourceEntry mainEntry)
+        {
+            this.mainEntry = Objects.requireNonNull(mainEntry);
+            return this;
+        }
+
         public @Nullable String getIdentity()
         {
             return identity;
@@ -172,6 +189,11 @@ public class PluginAttribution {
         public @Nullable String getMainClass()
         {
             return mainClass;
+        }
+
+        public @Nullable SourceEntry getMainEntry()
+        {
+            return mainEntry;
         }
 
         public @Nonnull Collection<String> getAuthors()
@@ -214,6 +236,7 @@ public class PluginAttribution {
         {
             return new PluginAttribution(
                     mainClass,
+                    mainEntry,
                     identity,
                     name,
                     version,
@@ -225,6 +248,8 @@ public class PluginAttribution {
         }
 
         private String mainClass;
+
+        private SourceEntry mainEntry;
 
         private String name;
 

@@ -6,10 +6,12 @@ import com.theredpixelteam.upm4j.loader.PluginEntryDiscoverer;
 import com.theredpixelteam.upm4j.loader.attribution.processor.Barrier;
 import com.theredpixelteam.upm4j.loader.source.Source;
 import com.theredpixelteam.upm4j.loader.source.SourceEntry;
+import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 import org.objectweb.asm.tree.AnnotationNode;
 
 import javax.annotation.Nonnull;
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.Objects;
 
 public abstract class PluginEntrySearchStageEvent implements UPMEvent {
@@ -142,6 +144,46 @@ public abstract class PluginEntrySearchStageEvent implements UPMEvent {
         {
             super(context, source, policy, barrier);
         }
+    }
+
+    public static class Failed extends PluginEntrySearchStageEvent
+    {
+        public Failed(@Nonnull UPMContext context,
+                      @Nonnull Source source,
+                      @Nonnull PluginEntryDiscoverer policy,
+                      @Nonnull Barrier barrier,
+                      @Nonnull Exception cause)
+        {
+            super(context, source, policy, barrier);
+            this.cause = Objects.requireNonNull(cause, "cause");
+        }
+
+        public @Nonnull Exception getCause()
+        {
+            return cause;
+        }
+
+        private final Exception cause;
+    }
+
+    public static class Passed extends PluginEntrySearchStageEvent
+    {
+        public Passed(@Nonnull UPMContext context,
+                      @Nonnull Source source,
+                      @Nonnull PluginEntryDiscoverer policy,
+                      @Nonnull Barrier barrier,
+                      @Nonnull Collection<PluginAttribution> attributions)
+        {
+            super(context, source, policy, barrier);
+            this.attributions = Objects.requireNonNull(attributions, "attributions");
+        }
+
+        public @Nonnull Collection<PluginAttribution> getAttributions()
+        {
+            return attributions;
+        }
+
+        private final Collection<PluginAttribution> attributions;
     }
 
     public static class BlockedByBarrier extends PluginEntrySearchStageEvent

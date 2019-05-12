@@ -1,7 +1,5 @@
 package com.theredpixelteam.upm4j.plugin;
 
-import sun.swing.plaf.windows.ClassicSortArrowIcon;
-
 public class ClassicPluginStates {
     private ClassicPluginStates()
     {

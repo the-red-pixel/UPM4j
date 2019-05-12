@@ -7,13 +7,11 @@ public interface Plugin {
 
     public @Nonnull PluginAttribution getAttribution();
 
+    public @Nonnull Class<?> getMainClass();
+
     public boolean isLoaded();
 
     public boolean isEnabled();
-
-    public boolean isDisabled();
-
-    public boolean isUnloaded();
 
     public boolean load();
 
