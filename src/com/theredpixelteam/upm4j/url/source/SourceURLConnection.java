@@ -1,6 +1,6 @@
-package com.theredpixelteam.upm4j.url.plugin;
+package com.theredpixelteam.upm4j.url.source;
 
-import com.theredpixelteam.upm4j.loader.source.PluginSource;
+import com.theredpixelteam.upm4j.loader.source.Source;
 
 import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
@@ -10,9 +10,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Objects;
 
-public class PluginSourceURLConnection extends URLConnection {
-    protected PluginSourceURLConnection(@Nonnull PluginSource source,
-                                        @Nonnull URL url)
+public class SourceURLConnection extends URLConnection {
+    protected SourceURLConnection(@Nonnull Source source,
+                                  @Nonnull URL url)
     {
         super(url);
         this.source = Objects.requireNonNull(source);
@@ -53,9 +53,9 @@ public class PluginSourceURLConnection extends URLConnection {
     {
         return new ByteArrayInputStream(source.getEntry(url.getPath().substring(1))
                 .orElseThrow(
-                        () -> new IOException("No such plugin class path resource: " + url.getPath().substring(1)))
+                        () -> new IOException("No such source class path resource: " + url.getPath().substring(1)))
                 .getBytes());
     }
 
-    private final PluginSource source;
+    private final Source source;
 }

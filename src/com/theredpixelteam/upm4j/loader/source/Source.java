@@ -10,13 +10,13 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public interface PluginSource {
+public interface Source {
     public @Nonnull String getName();
 
-    public @Nonnull Iterator<PluginSourceEntry> getEntries();
+    public @Nonnull Iterator<SourceEntry> getEntries();
 
     public default @Nonnull
-    Iterable<PluginSourceEntry> getEntries(@Nonnull SourceEntryFilter filter)
+    Iterable<SourceEntry> getEntries(@Nonnull SourceEntryFilter filter)
     {
         Objects.requireNonNull(filter);
 
@@ -24,14 +24,14 @@ public interface PluginSource {
     }
 
     public default @Nonnull
-    Iterable<PluginSourceEntry> getEntries(@Nonnull SourceEntryNameFilter filter)
+    Iterable<SourceEntry> getEntries(@Nonnull SourceEntryNameFilter filter)
     {
         return getEntries(filter, (entry, ioException) -> {/* mute */});
     }
 
     public default @Nonnull
-    Iterable<PluginSourceEntry> getEntries(@Nonnull SourceEntryNameFilter filter,
-                                           @Nonnull BiConsumer<PluginSourceEntry, IOException> ioExceptionHandler)
+    Iterable<SourceEntry> getEntries(@Nonnull SourceEntryNameFilter filter,
+                                     @Nonnull BiConsumer<SourceEntry, IOException> ioExceptionHandler)
     {
         Objects.requireNonNull(filter);
 
@@ -45,7 +45,7 @@ public interface PluginSource {
         });
     }
 
-    public Optional<PluginSourceEntry> getEntry(@Nonnull String name);
+    public Optional<SourceEntry> getEntry(@Nonnull String name);
 
     public default boolean hasEntry(@Nonnull String name)
     {

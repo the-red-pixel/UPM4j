@@ -1,8 +1,8 @@
 package com.theredpixelteam.upm4j.loader.source.jar;
 
 import com.theredpixelteam.redtea.util.io.IOUtils;
-import com.theredpixelteam.upm4j.loader.source.PluginSource;
-import com.theredpixelteam.upm4j.loader.source.PluginSourceEntry;
+import com.theredpixelteam.upm4j.loader.source.Source;
+import com.theredpixelteam.upm4j.loader.source.SourceEntry;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -10,10 +10,10 @@ import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-public class JarPluginSourceEntry implements PluginSourceEntry {
-    protected JarPluginSourceEntry(@Nonnull JarPluginSource source,
-                                   @Nonnull JarFile jar,
-                                   @Nonnull JarEntry entry)
+public class JarSourceEntry implements SourceEntry {
+    protected JarSourceEntry(@Nonnull JarSource source,
+                             @Nonnull JarFile jar,
+                             @Nonnull JarEntry entry)
     {
         this.source = Objects.requireNonNull(source, "source");
         this.jar = Objects.requireNonNull(jar, "jar");
@@ -37,14 +37,15 @@ public class JarPluginSourceEntry implements PluginSourceEntry {
 
 
     @Override
-    public @Nonnull PluginSource getSource()
+    public @Nonnull
+    Source getSource()
     {
         return source;
     }
 
     protected byte[] bytes = null;
 
-    protected final JarPluginSource source;
+    protected final JarSource source;
 
     protected final JarFile jar;
 

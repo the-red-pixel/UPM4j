@@ -4,8 +4,8 @@ import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.loader.attribution.AttributionWorkflow;
 import com.theredpixelteam.upm4j.loader.attribution.processor.*;
 import com.theredpixelteam.upm4j.loader.event.PluginEntrySearchStageEvent;
-import com.theredpixelteam.upm4j.loader.source.PluginSource;
-import com.theredpixelteam.upm4j.loader.source.PluginSourceEntry;
+import com.theredpixelteam.upm4j.loader.source.Source;
+import com.theredpixelteam.upm4j.loader.source.SourceEntry;
 import com.theredpixelteam.upm4j.loader.source.SourceEntryNameFilter;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 import org.kucro3.jam2.util.Jam2Util;
@@ -26,7 +26,7 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public abstract @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
-                                                                  @Nonnull PluginSource source,
+                                                                  @Nonnull Source source,
                                                                   @Nonnull Barrier barrier)
             throws IOException;
 
@@ -69,7 +69,7 @@ public abstract class PluginEntryDiscoverer {
         return new Custom(processor);
     }
 
-    static void requireNonNull(UPMContext context, PluginSource source, Barrier barrier)
+    static void requireNonNull(UPMContext context, Source source, Barrier barrier)
     {
         Objects.requireNonNull(context, "context");
         Objects.requireNonNull(source, "source");
@@ -77,7 +77,7 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static boolean postStageStart(@Nonnull UPMContext context,
-                                         @Nonnull PluginSource source,
+                                         @Nonnull Source source,
                                          @Nonnull PluginEntryDiscoverer instance,
                                          @Nonnull Barrier barrier)
     {
@@ -90,7 +90,7 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static void postStageCancelled(@Nonnull UPMContext context,
-                                          @Nonnull PluginSource source,
+                                          @Nonnull Source source,
                                           @Nonnull PluginEntryDiscoverer instance,
                                           @Nonnull Barrier barrier)
     {
@@ -99,7 +99,7 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static void postBlockedByBarrier(@Nonnull UPMContext context,
-                                            @Nonnull PluginSource source,
+                                            @Nonnull Source source,
                                             @Nonnull PluginEntryDiscoverer instance,
                                             @Nonnull Barrier barrier)
     {
@@ -108,11 +108,11 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static boolean postClassEntryFound(@Nonnull UPMContext context,
-                                              @Nonnull PluginSource source,
+                                              @Nonnull Source source,
                                               @Nonnull PluginEntryDiscoverer instance,
                                               @Nonnull Barrier barrier,
                                               @Nonnull String className,
-                                              @Nonnull PluginSourceEntry entry)
+                                              @Nonnull SourceEntry entry)
     {
         PluginEntrySearchStageEvent.ClassEntryFound event = new PluginEntrySearchStageEvent
                 .ClassEntryFound(context, source, instance, barrier, className, entry);
@@ -123,29 +123,29 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static void postClassEntryProcessCancelled(@Nonnull UPMContext context,
-                                                      @Nonnull PluginSource source,
+                                                      @Nonnull Source source,
                                                       @Nonnull PluginEntryDiscoverer instance,
                                                       @Nonnull Barrier barrier,
                                                       @Nonnull String className,
-                                                      @Nonnull PluginSourceEntry entry)
+                                                      @Nonnull SourceEntry entry)
     {
         context.getEventBus().post(new PluginEntrySearchStageEvent
                 .ClassEntryProcessCancelled(context, source, instance, barrier, entry, className));
     }
 
     public static void postClassEntryProcessPassed(@Nonnull UPMContext context,
-                                                   @Nonnull PluginSource source,
+                                                   @Nonnull Source source,
                                                    @Nonnull PluginEntryDiscoverer instance,
                                                    @Nonnull Barrier barrier,
                                                    @Nonnull String className,
-                                                   @Nonnull PluginSourceEntry entry)
+                                                   @Nonnull SourceEntry entry)
     {
         context.getEventBus().post(new PluginEntrySearchStageEvent
                 .ClassEntryProcessPassed(context, source, instance, barrier, entry, className));
     }
 
     public static void postClassEntryNotFound(@Nonnull UPMContext context,
-                                              @Nonnull PluginSource source,
+                                              @Nonnull Source source,
                                               @Nonnull PluginEntryDiscoverer instance,
                                               @Nonnull Barrier barrier,
                                               @Nonnull String className)
@@ -155,10 +155,10 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static boolean postConfigurationEntryFound(@Nonnull UPMContext context,
-                                                      @Nonnull PluginSource source,
+                                                      @Nonnull Source source,
                                                       @Nonnull PluginEntryDiscoverer instance,
                                                       @Nonnull Barrier barrier,
-                                                      @Nonnull PluginSourceEntry entry)
+                                                      @Nonnull SourceEntry entry)
     {
         PluginEntrySearchStageEvent.ConfigurationEntryFound event =
                 new PluginEntrySearchStageEvent.ConfigurationEntryFound(context, source, instance, barrier, entry);
@@ -169,27 +169,27 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static void postConfigurationEntryProcessCancelled(@Nonnull UPMContext context,
-                                                              @Nonnull PluginSource source,
+                                                              @Nonnull Source source,
                                                               @Nonnull PluginEntryDiscoverer instance,
                                                               @Nonnull Barrier barrier,
-                                                              @Nonnull PluginSourceEntry entry)
+                                                              @Nonnull SourceEntry entry)
     {
         context.getEventBus().post(new PluginEntrySearchStageEvent
                 .ConfigurationEntryProcessCancelled(context, source, instance, barrier, entry));
     }
 
     public static void postConfigurationEntryProcessPassed(@Nonnull UPMContext context,
-                                                           @Nonnull PluginSource source,
+                                                           @Nonnull Source source,
                                                            @Nonnull PluginEntryDiscoverer instance,
                                                            @Nonnull Barrier barrier,
-                                                           @Nonnull PluginSourceEntry entry)
+                                                           @Nonnull SourceEntry entry)
     {
         context.getEventBus().post(new PluginEntrySearchStageEvent
                 .ConfigurationEntryProcessPassed(context, source, instance, barrier, entry));
     }
 
     public static void postConfigurationEntryNotFound(@Nonnull UPMContext context,
-                                                      @Nonnull PluginSource source,
+                                                      @Nonnull Source source,
                                                       @Nonnull PluginEntryDiscoverer instance,
                                                       @Nonnull Barrier barrier,
                                                       @Nonnull String file)
@@ -199,10 +199,10 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static boolean postEntryScan(@Nonnull UPMContext context,
-                                        @Nonnull PluginSource source,
+                                        @Nonnull Source source,
                                         @Nonnull PluginEntryDiscoverer instance,
                                         @Nonnull Barrier barrier,
-                                        @Nonnull PluginSourceEntry entry)
+                                        @Nonnull SourceEntry entry)
     {
         PluginEntrySearchStageEvent.EntryScan event =
                 new PluginEntrySearchStageEvent.EntryScan(context, source, instance, barrier, entry);
@@ -213,30 +213,30 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static void postEntryCancelled(@Nonnull UPMContext context,
-                                          @Nonnull PluginSource source,
+                                          @Nonnull Source source,
                                           @Nonnull PluginEntryDiscoverer instance,
                                           @Nonnull Barrier barrier,
-                                          @Nonnull PluginSourceEntry entry)
+                                          @Nonnull SourceEntry entry)
     {
         context.getEventBus().post(
                 new PluginEntrySearchStageEvent.EntryCancelled(context, source, instance, barrier, entry));
     }
 
     public static void postEntryIgnored(@Nonnull UPMContext context,
-                                        @Nonnull PluginSource source,
+                                        @Nonnull Source source,
                                         @Nonnull PluginEntryDiscoverer instance,
                                         @Nonnull Barrier barrier,
-                                        @Nonnull PluginSourceEntry entry)
+                                        @Nonnull SourceEntry entry)
     {
         context.getEventBus().post(
                 new PluginEntrySearchStageEvent.EntryIgnored(context, source, instance, barrier, entry));
     }
 
     public static void postEntryScanException(@Nonnull UPMContext context,
-                                              @Nonnull PluginSource source,
+                                              @Nonnull Source source,
                                               @Nonnull PluginEntryDiscoverer instance,
                                               @Nonnull Barrier barrier,
-                                              @Nonnull PluginSourceEntry entry,
+                                              @Nonnull SourceEntry entry,
                                               @Nonnull Exception cause)
     {
         context.getEventBus().post(new PluginEntrySearchStageEvent
@@ -244,10 +244,10 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static boolean postAnnotationEntryFound(@Nonnull UPMContext context,
-                                                   @Nonnull PluginSource source,
+                                                   @Nonnull Source source,
                                                    @Nonnull PluginEntryDiscoverer instance,
                                                    @Nonnull Barrier barrier,
-                                                   @Nonnull PluginSourceEntry entry,
+                                                   @Nonnull SourceEntry entry,
                                                    @Nonnull Class<? extends Annotation> annotationType,
                                                    @Nonnull AnnotationNode node)
     {
@@ -260,10 +260,10 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static void postAnnotationEntryProcessCancelled(@Nonnull UPMContext context,
-                                                           @Nonnull PluginSource source,
+                                                           @Nonnull Source source,
                                                            @Nonnull PluginEntryDiscoverer instance,
                                                            @Nonnull Barrier barrier,
-                                                           @Nonnull PluginSourceEntry entry,
+                                                           @Nonnull SourceEntry entry,
                                                            @Nonnull Class<? extends Annotation> annotationType,
                                                            @Nonnull AnnotationNode node)
     {
@@ -272,10 +272,10 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static void postAnnotationEntryProcessPassed(@Nonnull UPMContext context,
-                                                        @Nonnull PluginSource source,
+                                                        @Nonnull Source source,
                                                         @Nonnull PluginEntryDiscoverer instance,
                                                         @Nonnull Barrier barrier,
-                                                        @Nonnull PluginSourceEntry entry,
+                                                        @Nonnull SourceEntry entry,
                                                         @Nonnull Class<? extends Annotation> annotationType,
                                                         @Nonnull AnnotationNode node)
     {
@@ -284,10 +284,10 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static boolean postSubclassEntryFound(@Nonnull UPMContext context,
-                                                 @Nonnull PluginSource source,
+                                                 @Nonnull Source source,
                                                  @Nonnull PluginEntryDiscoverer instance,
                                                  @Nonnull Barrier barrier,
-                                                 @Nonnull PluginSourceEntry entry,
+                                                 @Nonnull SourceEntry entry,
                                                  @Nonnull Class<?> superclass)
     {
         PluginEntrySearchStageEvent.SubclassEntryFound event = new PluginEntrySearchStageEvent
@@ -299,10 +299,10 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static void postSubclassEntryProcessCancelled(@Nonnull UPMContext context,
-                                                         @Nonnull PluginSource source,
+                                                         @Nonnull Source source,
                                                          @Nonnull PluginEntryDiscoverer instance,
                                                          @Nonnull Barrier barrier,
-                                                         @Nonnull PluginSourceEntry entry,
+                                                         @Nonnull SourceEntry entry,
                                                          @Nonnull Class<?> superclass)
     {
         context.getEventBus().post(new PluginEntrySearchStageEvent
@@ -310,10 +310,10 @@ public abstract class PluginEntryDiscoverer {
     }
 
     public static void postSubclassEntryProcessPassed(@Nonnull UPMContext context,
-                                                      @Nonnull PluginSource source,
+                                                      @Nonnull Source source,
                                                       @Nonnull PluginEntryDiscoverer instance,
                                                       @Nonnull Barrier barrier,
-                                                      @Nonnull PluginSourceEntry entry,
+                                                      @Nonnull SourceEntry entry,
                                                       @Nonnull Class<?> superclass)
     {
         context.getEventBus().post(new PluginEntrySearchStageEvent
@@ -353,7 +353,7 @@ public abstract class PluginEntryDiscoverer {
         }
 
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
-                                                             @Nonnull PluginSource source,
+                                                             @Nonnull Source source,
                                                              @Nonnull Barrier barrier)
                 throws IOException
         {
@@ -381,7 +381,7 @@ public abstract class PluginEntryDiscoverer {
                         Jam2Util.fromInternalNameToResource(
                         Jam2Util.fromCanonicalToInternalName(name));
 
-                PluginSourceEntry entry = source.getEntry(sourceName).orElse(null);
+                SourceEntry entry = source.getEntry(sourceName).orElse(null);
 
                 if (entry == null)
                 {
@@ -433,7 +433,7 @@ public abstract class PluginEntryDiscoverer {
 
         @Override
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
-                                                             @Nonnull PluginSource source,
+                                                             @Nonnull Source source,
                                                              @Nonnull Barrier barrier)
                 throws IOException
         {
@@ -457,7 +457,7 @@ public abstract class PluginEntryDiscoverer {
                     break;
                 }
 
-                PluginSourceEntry entry = source.getEntry(file).orElse(null);
+                SourceEntry entry = source.getEntry(file).orElse(null);
 
                 if (entry == null)
                 {
@@ -509,7 +509,7 @@ public abstract class PluginEntryDiscoverer {
 
         @Override
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
-                                                             @Nonnull PluginSource source,
+                                                             @Nonnull Source source,
                                                              @Nonnull Barrier barrier)
                 throws IOException
         {
@@ -524,7 +524,7 @@ public abstract class PluginEntryDiscoverer {
 
             AttributionWorkflow workflow = new AttributionWorkflow(context);
 
-            L: for (PluginSourceEntry entry :
+            L: for (SourceEntry entry :
                     source.getEntries((SourceEntryNameFilter) name -> name.endsWith(".class")))
             {
                 if (barrier.isBlocked())
@@ -620,7 +620,7 @@ public abstract class PluginEntryDiscoverer {
 
         @Override
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
-                                                             @Nonnull PluginSource source,
+                                                             @Nonnull Source source,
                                                              @Nonnull Barrier barrier)
                 throws IOException
         {
@@ -635,7 +635,7 @@ public abstract class PluginEntryDiscoverer {
 
             AttributionWorkflow workflow = new AttributionWorkflow(context);
 
-            L: for (PluginSourceEntry entry :
+            L: for (SourceEntry entry :
                     source.getEntries((SourceEntryNameFilter) name -> name.endsWith(".class")))
             {
                 if (barrier.isBlocked())
@@ -702,7 +702,7 @@ public abstract class PluginEntryDiscoverer {
 
         @Override
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
-                                                             @Nonnull PluginSource source,
+                                                             @Nonnull Source source,
                                                              @Nonnull Barrier barrier)
                 throws IOException
         {

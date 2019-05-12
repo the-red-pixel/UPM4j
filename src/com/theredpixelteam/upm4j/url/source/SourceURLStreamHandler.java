@@ -1,6 +1,6 @@
-package com.theredpixelteam.upm4j.url.plugin;
+package com.theredpixelteam.upm4j.url.source;
 
-import com.theredpixelteam.upm4j.loader.source.PluginSource;
+import com.theredpixelteam.upm4j.loader.source.Source;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -10,9 +10,9 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.util.Objects;
 
-public class PluginSourceURLStreamHandler extends URLStreamHandler {
-    public PluginSourceURLStreamHandler(@Nonnull String identity,
-                                        @Nonnull PluginSource source)
+public class SourceURLStreamHandler extends URLStreamHandler {
+    public SourceURLStreamHandler(@Nonnull String identity,
+                                  @Nonnull Source source)
     {
         this.identity = Objects.requireNonNull(identity, "identity");
         this.source = Objects.requireNonNull(source, "source");
@@ -25,10 +25,10 @@ public class PluginSourceURLStreamHandler extends URLStreamHandler {
             throw new MalformedURLException("Identity failure, received \""
                     + u.getProtocol() + "\" but \"" + identity + "\" required");
 
-        return new PluginSourceURLConnection(source, u);
+        return new SourceURLConnection(source, u);
     }
 
-    public @Nonnull PluginSource getSource()
+    public @Nonnull Source getSource()
     {
         return source;
     }
@@ -40,5 +40,5 @@ public class PluginSourceURLStreamHandler extends URLStreamHandler {
 
     private final String identity;
 
-    private final PluginSource source;
+    private final Source source;
 }

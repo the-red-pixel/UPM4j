@@ -2,8 +2,8 @@ package com.theredpixelteam.upm4j.loader.source.jar;
 
 import com.theredpixelteam.redtea.function.Consumer;
 import com.theredpixelteam.redtea.util.Optional;
-import com.theredpixelteam.upm4j.loader.source.PluginSource;
-import com.theredpixelteam.upm4j.loader.source.PluginSourceEntry;
+import com.theredpixelteam.upm4j.loader.source.Source;
+import com.theredpixelteam.upm4j.loader.source.SourceEntry;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -11,8 +11,8 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-public class JarPluginSource implements PluginSource {
-    public JarPluginSource(@Nonnull JarFile jar)
+public class JarSource implements Source {
+    public JarSource(@Nonnull JarFile jar)
     {
         this.jar = Objects.requireNonNull(jar);
     }
@@ -24,7 +24,7 @@ public class JarPluginSource implements PluginSource {
     }
 
     @Override
-    public @Nonnull Iterator<PluginSourceEntry> getEntries()
+    public @Nonnull Iterator<SourceEntry> getEntries()
     {
         if (!polled)
             poll();
@@ -33,7 +33,7 @@ public class JarPluginSource implements PluginSource {
     }
 
     @Override
-    public Optional<PluginSourceEntry> getEntry(@Nonnull String name)
+    public Optional<SourceEntry> getEntry(@Nonnull String name)
     {
         if (!polled)
             poll();
@@ -65,13 +65,13 @@ public class JarPluginSource implements PluginSource {
         {
             JarEntry entry = entryEnumeration.nextElement();
 
-            entries.put(entry.getName(), new JarPluginSourceEntry(this, jar, entry));
+            entries.put(entry.getName(), new JarSourceEntry(this, jar, entry));
         }
 
         polled = true;
     }
 
-    private final Map<String, PluginSourceEntry> entries = new HashMap<>();
+    private final Map<String, SourceEntry> entries = new HashMap<>();
 
     private volatile boolean polled = false;
 

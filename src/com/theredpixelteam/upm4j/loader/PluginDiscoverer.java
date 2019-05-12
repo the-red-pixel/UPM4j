@@ -1,14 +1,14 @@
 package com.theredpixelteam.upm4j.loader;
 
 import com.theredpixelteam.upm4j.UPMContext;
-import com.theredpixelteam.upm4j.loader.source.PluginSource;
+import com.theredpixelteam.upm4j.loader.source.Source;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
 
 public class PluginDiscoverer {
     public PluginDiscoverer(@Nonnull UPMContext context,
-                            @Nonnull PluginSource source)
+                            @Nonnull Source source)
     {
         this.context = Objects.requireNonNull(context);
 
@@ -19,19 +19,17 @@ public class PluginDiscoverer {
         this.instancePolicy = context.getInstancePolicy();
     }
 
-    public @Nonnull PluginSource getSource()
+    public @Nonnull Source getSource()
     {
         return source;
     }
 
-    public @Nonnull
-    PluginInstancePolicy getInstancePolicy()
+    public @Nonnull PluginInstancePolicy getInstancePolicy()
     {
         return instancePolicy;
     }
 
-    public @Nonnull
-    PluginEntryDiscoverer getEntryDiscoverer()
+    public @Nonnull PluginEntryDiscoverer getEntryDiscoverer()
     {
         return entryDiscoverer;
     }
@@ -52,7 +50,7 @@ public class PluginDiscoverer {
         // TODO
     }
 
-    private final PluginSource source;
+    private final Source source;
 
     private final PluginInstancePolicy instancePolicy;
 
