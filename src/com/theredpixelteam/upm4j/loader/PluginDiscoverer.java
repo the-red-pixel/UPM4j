@@ -69,7 +69,7 @@ public class PluginDiscoverer {
     private void clearState()
     {
         lastException = null;
-        stage = STAGE_INITIALIZATION;
+        stage = STAGE_INITIALIZED;
     }
 
     private void nextStage()
@@ -91,7 +91,7 @@ public class PluginDiscoverer {
 
         Barrier barrier = single ? (restricted ? Barrier.barrier(2) : Barrier.barrier(1)) : Barrier.barrier();
 
-        nextStage(); // INITIALIZATION -> ENTRY_SEARCH
+        nextStage(); // INITIALIZED -> ENTRY_SEARCH
 
         Collection<PluginAttribution> attributions;
         try {
@@ -142,7 +142,7 @@ public class PluginDiscoverer {
                 .Passed(context, source, discoverer, barrier, attributions));
     }
 
-    private int stage = STAGE_INITIALIZATION;
+    private int stage = STAGE_INITIALIZED;
 
     private final Source source;
 
@@ -156,7 +156,7 @@ public class PluginDiscoverer {
 
     private final UPMContext context;
 
-    public static final int STAGE_INITIALIZATION = 0;
+    public static final int STAGE_INITIALIZED = 0;
 
     public static final int STAGE_ENTRY_SEARCH = 1;
 
