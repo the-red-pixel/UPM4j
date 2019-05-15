@@ -1,6 +1,8 @@
 package com.theredpixelteam.upm4j.loader;
 
 import com.theredpixelteam.redtea.util.Optional;
+import com.theredpixelteam.upm4j.loader.exception.PluginVerificationException;
+import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 
 import javax.annotation.Nonnull;
 
@@ -11,5 +13,6 @@ public interface PluginVerifier {
 
     public @Nonnull Optional<String> getDescription();
 
-    // TODO
+    public boolean verify(@Nonnull PluginAttribution attribution)
+            throws PluginVerificationException;
 }

@@ -13,9 +13,9 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Objects;
 
-public class PluginDiscoverer {
-    public PluginDiscoverer(@Nonnull UPMContext context,
-                            @Nonnull Source source)
+public class PluginConstructor {
+    public PluginConstructor(@Nonnull UPMContext context,
+                             @Nonnull Source source)
     {
         this.context = Objects.requireNonNull(context);
 

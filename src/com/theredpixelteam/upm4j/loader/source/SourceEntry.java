@@ -8,6 +8,5 @@ public interface SourceEntry {
 
     public @Nonnull byte[] getBytes() throws IOException;
 
-    public @Nonnull
-    Source getSource();
+    public @Nonnull Source getSource();
 }
