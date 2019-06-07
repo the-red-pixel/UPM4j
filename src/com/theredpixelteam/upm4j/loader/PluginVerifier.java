@@ -13,6 +13,11 @@ public interface PluginVerifier {
 
     public @Nonnull Optional<String> getDescription();
 
-    public boolean verify(@Nonnull PluginAttribution attribution)
+    public Result verify(@Nonnull PluginAttribution attribution)
             throws PluginVerificationException;
+
+    public static class Result
+    {
+
+    }
 }
