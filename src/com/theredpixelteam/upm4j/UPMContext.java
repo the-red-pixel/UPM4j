@@ -22,6 +22,7 @@ public class UPMContext {
                @Nonnull PluginEntryDiscoverer entryDiscoverer,
                @Nonnull InvokerProvider invokerProvider,
                @Nonnull PluginStateTree pluginStateTree,
+               @Nonnull PluginVerificationManager pluginVerificationManager,
                @Nullable SubscriberExceptionHandler eventBusExceptionHandler)
     {
         this.name = name;
@@ -31,6 +32,7 @@ public class UPMContext {
         this.entryDiscoverer = entryDiscoverer;
         this.invokerProvider = invokerProvider;
         this.pluginStateTree = pluginStateTree;
+        this.pluginVerificationManager = pluginVerificationManager;
         this.eventBus = eventBusExceptionHandler == null ?
                 new EventBus() : new EventBus(eventBusExceptionHandler);
     }
@@ -77,6 +79,11 @@ public class UPMContext {
         return eventBus;
     }
 
+    public @Nonnull PluginVerificationManager getVerificationManager()
+    {
+        return pluginVerificationManager;
+    }
+
     public static @Nonnull Builder builder()
     {
         return new Builder();
@@ -97,6 +104,8 @@ public class UPMContext {
     private final UPMClassLoaderProvider classLoaderProvider;
 
     private final PluginStateTree pluginStateTree;
+
+    private final PluginVerificationManager pluginVerificationManager;
 
     public static final class Builder
     {
@@ -210,6 +219,17 @@ public class UPMContext {
             return pluginStateTree;
         }
 
+        public @Nonnull Builder addVerifier(PluginVerifier verifier)
+        {
+            pluginVerificationManager.addVerifier(verifier);
+            return this;
+        }
+
+        public @Nonnull PluginVerificationManager getVerificationManager()
+        {
+            return pluginVerificationManager;
+        }
+
         public @Nonnull UPMContext build()
         {
             return new UPMContext(
@@ -220,6 +240,7 @@ public class UPMContext {
                     Objects.requireNonNull(entryDiscoverer, "EntryDiscoverer"),
                     Objects.requireNonNull(invokerProvider, "InvokerProvider"),
                     Objects.requireNonNull(pluginStateTree, "PluginStateTree"),
+                    pluginVerificationManager,
                     eventBusExceptionHandler
             );
         }
@@ -239,5 +260,7 @@ public class UPMContext {
         private UPMClassLoaderProvider classLoaderProvider;
 
         private PluginStateTree pluginStateTree;
+
+        private final PluginVerificationManager pluginVerificationManager = new PluginVerificationManager();
     }
 }

@@ -8,7 +8,7 @@ import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 import javax.annotation.Nonnull;
 import java.util.Objects;
 
-public class PluginVerificationStageEvent implements UPMEvent {
+public abstract class PluginVerificationStageEvent implements UPMEvent {
     protected PluginVerificationStageEvent(@Nonnull UPMContext context,
                                            @Nonnull PluginAttribution plugin)
     {
@@ -31,7 +31,7 @@ public class PluginVerificationStageEvent implements UPMEvent {
 
     private final PluginAttribution plugin;
 
-    protected static class Cancellable extends PluginVerificationStageEvent implements UPMEvent.Cancellable
+    protected abstract static class Cancellable extends PluginVerificationStageEvent implements UPMEvent.Cancellable
     {
         protected Cancellable(@Nonnull UPMContext context,
                               @Nonnull PluginAttribution plugin)
@@ -72,7 +72,7 @@ public class PluginVerificationStageEvent implements UPMEvent {
         }
     }
 
-    public static class VerificationEvent extends PluginVerificationStageEvent
+    public static abstract class VerificationEvent extends PluginVerificationStageEvent
     {
         protected VerificationEvent(@Nonnull UPMContext context,
                                     @Nonnull PluginAttribution plugin,
@@ -90,7 +90,7 @@ public class PluginVerificationStageEvent implements UPMEvent {
         private final PluginVerifier verifier;
     }
 
-    public static class CancellableVerificationEvent extends VerificationEvent implements UPMEvent.Cancellable
+    public static abstract class CancellableVerificationEvent extends VerificationEvent implements UPMEvent.Cancellable
     {
         protected CancellableVerificationEvent(@Nonnull UPMContext context,
                                                @Nonnull PluginAttribution plugin,
@@ -138,30 +138,57 @@ public class PluginVerificationStageEvent implements UPMEvent {
     {
         public VerificationPassed(@Nonnull UPMContext context,
                                   @Nonnull PluginAttribution plugin,
-                                  @Nonnull PluginVerifier verifier)
+                                  @Nonnull PluginVerifier verifier,
+                                  @Nonnull PluginVerifier.Result result)
         {
             super(context, plugin, verifier);
+            this.result = Objects.requireNonNull(result, "result");
         }
+
+        public @Nonnull PluginVerifier.Result getResult()
+        {
+            return result;
+        }
+
+        private final PluginVerifier.Result result;
     }
 
-    public static class VerificationFailure extends CancellableVerificationEvent
+    public static class VerificationRejected extends CancellableVerificationEvent
     {
-        public VerificationFailure(@Nonnull UPMContext context,
-                                   @Nonnull PluginAttribution plugin,
-                                   @Nonnull PluginVerifier verifier)
+        public VerificationRejected(@Nonnull UPMContext context,
+                                    @Nonnull PluginAttribution plugin,
+                                    @Nonnull PluginVerifier verifier,
+                                    @Nonnull PluginVerifier.Result result)
         {
             super(context, plugin, verifier);
+            this.result = Objects.requireNonNull(result, "result");
         }
+
+        public @Nonnull PluginVerifier.Result getResult()
+        {
+            return result;
+        }
+
+        private final PluginVerifier.Result result;
     }
 
-    public static class VerificationFailureCancelled extends VerificationEvent
+    public static class VerificationRejectionCancelled extends VerificationEvent
     {
-        public VerificationFailureCancelled(@Nonnull UPMContext context,
-                                            @Nonnull PluginAttribution plugin,
-                                            @Nonnull PluginVerifier verifier)
+        public VerificationRejectionCancelled(@Nonnull UPMContext context,
+                                              @Nonnull PluginAttribution plugin,
+                                              @Nonnull PluginVerifier verifier,
+                                              @Nonnull PluginVerifier.Result result)
         {
             super(context, plugin, verifier);
+            this.result = Objects.requireNonNull(result, "result");
         }
+
+        public @Nonnull PluginVerifier.Result getResult()
+        {
+            return result;
+        }
+
+        private final PluginVerifier.Result result;
     }
 
     public static class Passed extends PluginVerificationStageEvent
@@ -173,5 +200,12 @@ public class PluginVerificationStageEvent implements UPMEvent {
         }
     }
 
-    // TODO
+    public static class Rejected extends PluginVerificationStageEvent
+    {
+        public Rejected(@Nonnull UPMContext context,
+                        @Nonnull PluginAttribution plugin)
+        {
+            super(context, plugin);
+        }
+    }
 }
