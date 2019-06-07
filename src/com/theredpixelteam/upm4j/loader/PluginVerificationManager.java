@@ -1,12 +1,18 @@
 package com.theredpixelteam.upm4j.loader;
 
 import com.theredpixelteam.redtea.util.Optional;
+import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 
 import javax.annotation.Nonnull;
 import java.util.*;
 
 public class PluginVerificationManager {
     // TODO
+
+    public boolean verify(PluginAttribution attribution)
+    {
+
+    }
 
     public boolean addVerifier(@Nonnull PluginVerifier verifier)
     {
