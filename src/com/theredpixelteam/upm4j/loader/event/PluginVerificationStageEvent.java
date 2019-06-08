@@ -1,6 +1,7 @@
 package com.theredpixelteam.upm4j.loader.event;
 
 import com.theredpixelteam.upm4j.UPMContext;
+import com.theredpixelteam.upm4j.event.AbstractUPMEvent;
 import com.theredpixelteam.upm4j.event.UPMEvent;
 import com.theredpixelteam.upm4j.loader.PluginVerifier;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
@@ -206,6 +207,14 @@ public abstract class PluginVerificationStageEvent implements UPMEvent {
                         @Nonnull PluginAttribution plugin)
         {
             super(context, plugin);
+        }
+    }
+
+    public static class Skipped extends AbstractUPMEvent
+    {
+        public Skipped(@Nonnull UPMContext context)
+        {
+            super(context);
         }
     }
 }

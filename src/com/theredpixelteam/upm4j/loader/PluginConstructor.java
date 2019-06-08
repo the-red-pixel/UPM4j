@@ -4,6 +4,7 @@ import com.theredpixelteam.redtea.util.Optional;
 import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.loader.attribution.processor.Barrier;
 import com.theredpixelteam.upm4j.loader.event.PluginEntrySearchStageEvent;
+import com.theredpixelteam.upm4j.loader.event.PluginVerificationStageEvent;
 import com.theredpixelteam.upm4j.loader.exception.PluginInstancePolicyViolationException;
 import com.theredpixelteam.upm4j.loader.source.Source;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
@@ -11,6 +12,7 @@ import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Objects;
 
 public class PluginConstructor {
@@ -74,7 +76,7 @@ public class PluginConstructor {
 
     private void nextStage()
     {
-        stage++;
+        stage <<= 1;
     }
 
     private void failed(Exception e)
@@ -82,7 +84,7 @@ public class PluginConstructor {
         lastException = e;
     }
 
-    public synchronized void discover()
+    public synchronized void construct()
     {
         clearState();
 
@@ -119,6 +121,30 @@ public class PluginConstructor {
 
         nextStage(); // ENTRY_SEARCH -> VERIFICATION
 
+        PluginVerificationManager verificationManager = context.getVerificationManager();
+        if (verificationManager.hasVerifier())
+        {
+            Iterator<PluginAttribution> iter = attributions.iterator();
+
+            while (iter.hasNext())
+            {
+                PluginAttribution attribution = iter.next();
+
+                if (verificationManager.verify(context, attribution))
+                    postVerificationStagePassed(context, attribution);
+                else
+                {
+                    iter.remove();
+
+                    postVerificationStageRejected(context, attribution);
+                }
+            }
+        }
+        else
+            postVerificationStageSkipped(context);
+
+        nextStage(); // VERIFICATION -> CLASS_LOAD
+
         // TODO
     }
 
@@ -142,6 +168,23 @@ public class PluginConstructor {
                 .Passed(context, source, discoverer, barrier, attributions));
     }
 
+    public static void postVerificationStagePassed(@Nonnull UPMContext context,
+                                                   @Nonnull PluginAttribution attribution)
+    {
+        context.getEventBus().post(new PluginVerificationStageEvent.Passed(context, attribution));
+    }
+
+    public static void postVerificationStageRejected(@Nonnull UPMContext context,
+                                                     @Nonnull PluginAttribution attribution)
+    {
+        context.getEventBus().post(new PluginVerificationStageEvent.Rejected(context, attribution));
+    }
+
+    public static void postVerificationStageSkipped(@Nonnull UPMContext context)
+    {
+        context.getEventBus().post(new PluginVerificationStageEvent.Skipped(context));
+    }
+
     private int stage = STAGE_INITIALIZED;
 
     private final Source source;
@@ -156,9 +199,11 @@ public class PluginConstructor {
 
     private final UPMContext context;
 
-    public static final int STAGE_INITIALIZED = 0;
+    public static final int STAGE_INITIALIZED = 0x01;
 
-    public static final int STAGE_ENTRY_SEARCH = 1;
+    public static final int STAGE_ENTRY_SEARCH = 0x02;
 
-    public static final int STAGE_VERIFICATION = 2;
+    public static final int STAGE_VERIFICATION = 0x04;
+
+    public static final int STAGE_CLASS_LOAD = 0x08;
 }
