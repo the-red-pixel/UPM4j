@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 public interface ClassTweaker {
-    public @Nonnull ClassNode tweak(@Nonnull ClassNode node) throws Exception;
+    public @Nonnull byte[] tweak(@Nonnull byte[] classBytes) throws Exception;
 
     public @Nonnull String getName();
 

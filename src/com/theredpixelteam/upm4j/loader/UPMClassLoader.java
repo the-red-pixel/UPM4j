@@ -6,6 +6,7 @@ import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.loader.source.Source;
 import com.theredpixelteam.upm4j.loader.source.SourceEntry;
 import com.theredpixelteam.upm4j.loader.tweaker.ClassTweaker;
+import com.theredpixelteam.upm4j.loader.tweaker.event.ClassTweakEvent;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 
 import javax.annotation.Nonnull;
@@ -111,14 +112,111 @@ public class UPMClassLoader extends ClassLoader {
             throw new ClassNotFoundException(name, e);
         }
 
+        TWEAK:
         synchronized (tweakerLock)
         {
+            if (postTweakStart(context, name, byts))
+            {
+                postTweakCancelled(context, name, byts);
+
+                break TWEAK;
+            }
+
+            Set<String> cancelledTweakers = new HashSet<>();
+
+            TWEAKER_WORKFLOW:
+            for (ClassTweaker tweaker : tweakingPipeline)
+            {
+                if (!cancelledTweakers.isEmpty()) // check if depending tweaker cancelled
+                    for (String dependency : tweaker.getDependencies())
+                        if (cancelledTweakers.contains(dependency))
+                        {
+                            cancelledTweakers.add(tweaker.getName());
+
+                            postTweakerCancelled(context, name, byts, tweaker,
+                                    ClassTweakEvent.TweakerCancelled.Cause.DEPENDENCY);
+
+                            continue TWEAKER_WORKFLOW;
+                        }
+
+                if (postTweakerEnter(context, name, byts, tweaker))
+                {
+                    cancelledTweakers.add(tweaker.getName());
+
+                    postTweakerCancelled(context, name, byts, tweaker,
+                            ClassTweakEvent.TweakerCancelled.Cause.EVENT);
+
+                    continue;
+                }
+
+                try {
+                    byte[] oldRef = byts;
+
+                    byts = tweaker.tweak(byts);
+
+                    if (byts == oldRef) // check byte array ref
+                        postTweakerIdenticalBytesRef(context, name, byts, tweaker);
+                } catch (Exception e) {
+                    // TODO Post exception and stop tweaking stage
+                }
+            }
+
             // TODO Tweaking operation
         }
 
         // TODO
 
         return null;
+    }
+
+    public static boolean postTweakStart(@Nonnull UPMContext context,
+                                         @Nonnull String className,
+                                         @Nonnull byte[] classBytes)
+    {
+        ClassTweakEvent.Start event = new ClassTweakEvent.Start(context, className, classBytes);
+
+        context.getEventBus().post(event);
+
+        return event.isCancelled();
+    }
+
+    public static void postTweakCancelled(@Nonnull UPMContext context,
+                                          @Nonnull String className,
+                                          @Nonnull byte[] classBytes)
+    {
+        context.getEventBus().post(new ClassTweakEvent.Cancelled(context, className, classBytes));
+    }
+
+    public static boolean postTweakerEnter(@Nonnull UPMContext context,
+                                           @Nonnull String className,
+                                           @Nonnull byte[] classBytes,
+                                           @Nonnull ClassTweaker tweaker)
+    {
+        ClassTweakEvent.TweakerEnter event =
+                new ClassTweakEvent.TweakerEnter(context, className, classBytes, tweaker);
+
+        context.getEventBus().post(event);
+
+        return event.isCancelled();
+    }
+
+    public static void postTweakerCancelled(@Nonnull UPMContext context,
+                                            @Nonnull String className,
+                                            @Nonnull byte[] classBytes,
+                                            @Nonnull ClassTweaker tweaker,
+                                            @Nonnull ClassTweakEvent.TweakerCancelled.Cause cause)
+    {
+        context.getEventBus().post(
+                new ClassTweakEvent.TweakerCancelled(context, className, classBytes, tweaker, cause));
+    }
+
+    public static void postTweakerIdenticalBytesRef(@Nonnull UPMContext context,
+                                                    @Nonnull String className,
+                                                    @Nonnull byte[] classBytes,
+                                                    @Nonnull ClassTweaker tweaker)
+    {
+        context.getEventBus().post(
+                new ClassTweakEvent.TweakerIdenticalBytesRefWarning(context, className, classBytes, tweaker));
     }
 
     boolean isDependencyAvailable(String dependency)
