@@ -2,25 +2,22 @@ package com.theredpixelteam.upm4j.loader;
 
 import com.theredpixelteam.redtea.util.Optional;
 import com.theredpixelteam.redtea.util.Pair;
+import com.theredpixelteam.upm4j.loader.source.Source;
+import com.theredpixelteam.upm4j.loader.source.SourceEntry;
 import com.theredpixelteam.upm4j.loader.tweaker.ClassTweaker;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 
 import javax.annotation.Nonnull;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.jar.Manifest;
 
-public class UPMClassLoader extends URLClassLoader {
+public class UPMClassLoader extends ClassLoader {
     public UPMClassLoader(boolean global)
     {
-        super(new URL[0]);
         this.global = global;
-    }
-
-    @Override
-    public void addURL(@Nonnull URL url)
-    {
-        super.addURL(Objects.requireNonNull(url));
     }
 
     public @Nonnull Optional<ClassTweaker> getTweaker(@Nonnull String name)
@@ -35,35 +32,90 @@ public class UPMClassLoader extends URLClassLoader {
 
     public boolean registerTweaker(@Nonnull ClassTweaker tweaker)
     {
-        if (tweakerMap.putIfAbsent(tweaker.getName(), tweaker) != null)
-            return false;
-
-        Pair<ClassTweaker, Set<String>> tweakerMark = null;
-        for (String dependency : tweaker.getDependencies())
+        synchronized (tweakerLock)
         {
-            if (isDependencyAvailable(dependency))
-                continue;
+            if (tweakerMap.putIfAbsent(tweaker.getName(), tweaker) != null)
+                return false;
 
-            if (tweakerMark == null)
-                tweakerMark = Pair.of(tweaker, new HashSet<>());
+            Pair<ClassTweaker, Set<String>> tweakerMark = null;
+            for (String dependency : tweaker.getDependencies())
+            {
+                if (isDependencyAvailable(dependency))
+                    continue;
 
-            tweakerMark.second().add(dependency);
-        }
+                if (tweakerMark == null)
+                    tweakerMark = Pair.of(tweaker, new HashSet<>());
 
-        if (tweakerMark != null)
+                tweakerMark.second().add(dependency);
+            }
+
+            if (tweakerMark != null)
+                return true;
+
+            tweakingPipeline.add(tweaker);
+
+            relaxWaitingTweakers();
+
             return true;
-
-        tweakingPipeline.add(tweaker);
-
-        relaxWaitingTweakers();
-
-        return true;
+        }
     }
 
     @Override
-    protected Class<?> findClass(String name)
+    protected Class<?> findClass(String name) throws ClassNotFoundException
     {
+        if (invalidClasses.contains(name))
+            throw new ClassNotFoundException(name);
+
+        Class<?> clazz;
+        if ((clazz = classCache.get(name)) != null)
+            return clazz;
+
+        String sourceName = name.replace(".", "/") + ".class";
+
+        Source source = null;
+        SourceEntry entry = null;
+        synchronized (sourceLock)
+        {
+            for (Source src : sources)
+            {
+                Optional<SourceEntry> e = src.getEntry(sourceName);
+
+                if (e.isPresent())
+                {
+                    source = src;
+                    entry = e.get();
+                    break;
+                }
+            }
+        }
+
+        if (source == null)
+            return super.findClass(name);
+
+        /*
+        int dot = name.indexOf('.');
+        String packageName = dot == -1 ? "" : name.substring(0, dot);
+
+        if (getPackage(name) == null)
+        {
+
+        }
+        */ // TODO Further package & manifest operation
+
+        byte[] byts;
+        try {
+            byts = entry.getBytes();
+        } catch (IOException e) {
+            throw new ClassNotFoundException(name, e);
+        }
+
+        synchronized (tweakerLock)
+        {
+            // TODO Tweaking operation
+        }
+
         // TODO
+
         return null;
     }
 
@@ -121,4 +173,16 @@ public class UPMClassLoader extends URLClassLoader {
     private final LinkedHashSet<ClassTweaker> tweakingPipeline = new LinkedHashSet<>();
 
     private final Map<String, ClassTweaker> tweakerMap = new HashMap<>();
+
+    private final Object tweakerLock = new Object();
+
+    private final List<Source> sources = new LinkedList<>();
+
+    private final Object sourceLock = new Object();
+
+    private final Map<String, Class<?>> classCache = new ConcurrentHashMap<>();
+
+    private final Set<String> invalidClasses = new ConcurrentSkipListSet<>();
+
+    private static final Manifest EMPTY_MANIFEST = new Manifest();
 }
