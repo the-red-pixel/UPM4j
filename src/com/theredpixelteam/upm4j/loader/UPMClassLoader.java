@@ -2,6 +2,7 @@ package com.theredpixelteam.upm4j.loader;
 
 import com.theredpixelteam.redtea.util.Optional;
 import com.theredpixelteam.redtea.util.Pair;
+import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.loader.source.Source;
 import com.theredpixelteam.upm4j.loader.source.SourceEntry;
 import com.theredpixelteam.upm4j.loader.tweaker.ClassTweaker;
@@ -15,8 +16,9 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.jar.Manifest;
 
 public class UPMClassLoader extends ClassLoader {
-    public UPMClassLoader(boolean global)
+    public UPMClassLoader(@Nonnull UPMContext context, boolean global)
     {
+        this.context = Objects.requireNonNull(context, "context");
         this.global = global;
     }
 
@@ -61,7 +63,7 @@ public class UPMClassLoader extends ClassLoader {
     }
 
     @Override
-    protected Class<?> findClass(String name) throws ClassNotFoundException
+    protected Class<?> findClass(@Nonnull String name) throws ClassNotFoundException
     {
         if (invalidClasses.contains(name))
             throw new ClassNotFoundException(name);
@@ -76,7 +78,7 @@ public class UPMClassLoader extends ClassLoader {
         SourceEntry entry = null;
         synchronized (sourceLock)
         {
-            for (Source src : sources)
+            for (Source src : sources.values())
             {
                 Optional<SourceEntry> e = src.getEntry(sourceName);
 
@@ -154,6 +156,35 @@ public class UPMClassLoader extends ClassLoader {
         }
     }
 
+    public boolean addSource(Source source)
+    {
+        synchronized (sourceLock)
+        {
+            return sources.putIfAbsent(source.getName(), source) != null;
+        }
+    }
+
+    public boolean removeSource(Source source)
+    {
+        synchronized (sourceLock)
+        {
+            return this.sources.remove(source.getName(), source);
+        }
+    }
+
+    public boolean removeSource(String name)
+    {
+        synchronized (sourceLock)
+        {
+            return this.sources.remove(name) != null;
+        }
+    }
+
+    public @Nonnull Optional<Source> getSource(String name)
+    {
+        return Optional.ofNullable(this.sources.get(name));
+    }
+
     public boolean isGlobal()
     {
         return global;
@@ -164,7 +195,14 @@ public class UPMClassLoader extends ClassLoader {
         return !global;
     }
 
+    public @Nonnull UPMContext getContext()
+    {
+        return context;
+    }
+
     private final boolean global;
+
+    private final UPMContext context;
 
     private final Set<PluginAttribution> attachmentSet = new HashSet<>();
 
@@ -176,7 +214,7 @@ public class UPMClassLoader extends ClassLoader {
 
     private final Object tweakerLock = new Object();
 
-    private final List<Source> sources = new LinkedList<>();
+    private final Map<String, Source> sources = new HashMap<>();
 
     private final Object sourceLock = new Object();
 
