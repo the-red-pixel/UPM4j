@@ -1,6 +1,7 @@
 package com.theredpixelteam.upm4j.loader.tweaker;
 
 import com.theredpixelteam.redtea.util.Optional;
+import com.theredpixelteam.upm4j.loader.UPMClassLoader;
 import org.objectweb.asm.tree.ClassNode;
 
 import javax.annotation.Nonnull;
@@ -21,4 +22,6 @@ public interface ClassTweaker {
     {
         return Collections.emptySet();
     }
+
+    public default void onRegister(@Nonnull UPMClassLoader upmClassLoader) {}
 }

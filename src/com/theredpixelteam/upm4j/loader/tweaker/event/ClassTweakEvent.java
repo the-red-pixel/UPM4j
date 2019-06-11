@@ -15,9 +15,7 @@ public class ClassTweakEvent implements UPMEvent {
     {
         this.context = Objects.requireNonNull(context, "context");
         this.className = Objects.requireNonNull(className, "className");
-        this.classBytes = ByteBuffer.wrap(
-                Objects.requireNonNull(classBytes, "classBytes"))
-                .asReadOnlyBuffer();
+        this.classBytes = Objects.requireNonNull(classBytes, "classBytes");
     }
 
     @Override
@@ -28,7 +26,7 @@ public class ClassTweakEvent implements UPMEvent {
 
     public @Nonnull ByteBuffer getClassBytes()
     {
-        return classBytes;
+        return ByteBuffer.wrap(classBytes).asReadOnlyBuffer();
     }
 
     public @Nonnull String getClassName()
@@ -38,7 +36,7 @@ public class ClassTweakEvent implements UPMEvent {
 
     private final UPMContext context;
 
-    private final ByteBuffer classBytes;
+    private final byte[] classBytes;
 
     private final String className;
 
@@ -165,6 +163,46 @@ public class ClassTweakEvent implements UPMEvent {
             EVENT,
             DEPENDENCY
         }
+    }
+
+    public static class TweakerFailure extends CancellableTweakerEvent
+    {
+        public TweakerFailure(@Nonnull UPMContext context,
+                              @Nonnull String className,
+                              @Nonnull byte[] classBytes,
+                              @Nonnull ClassTweaker tweaker,
+                              @Nonnull Exception exception)
+        {
+            super(context, className, classBytes, tweaker);
+            this.exception = Objects.requireNonNull(exception, "exception");
+        }
+
+        public @Nonnull Exception getException()
+        {
+            return exception;
+        }
+
+        private final Exception exception;
+    }
+
+    public static class TweakerFailureIgnored extends TweakerEvent
+    {
+        public TweakerFailureIgnored(@Nonnull UPMContext context,
+                                     @Nonnull String className,
+                                     @Nonnull byte[] classBytes,
+                                     @Nonnull ClassTweaker tweaker,
+                                     @Nonnull Exception exception)
+        {
+            super(context, className, classBytes, tweaker);
+            this.exception = Objects.requireNonNull(exception, "exception");
+        }
+
+        public @Nonnull Exception getException()
+        {
+            return exception;
+        }
+
+        private final Exception exception;
     }
 
     public static class TweakerIdenticalBytesRefWarning extends TweakerEvent

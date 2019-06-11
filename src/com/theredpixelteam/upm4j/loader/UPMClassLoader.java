@@ -3,6 +3,7 @@ package com.theredpixelteam.upm4j.loader;
 import com.theredpixelteam.redtea.util.Optional;
 import com.theredpixelteam.redtea.util.Pair;
 import com.theredpixelteam.upm4j.UPMContext;
+import com.theredpixelteam.upm4j.loader.event.UPMClassLoaderEvent;
 import com.theredpixelteam.upm4j.loader.source.Source;
 import com.theredpixelteam.upm4j.loader.source.SourceEntry;
 import com.theredpixelteam.upm4j.loader.tweaker.ClassTweaker;
@@ -17,9 +18,10 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.jar.Manifest;
 
 public class UPMClassLoader extends ClassLoader {
-    public UPMClassLoader(@Nonnull UPMContext context, boolean global)
+    public UPMClassLoader(@Nonnull UPMContext context, boolean checkBytsRef, boolean global)
     {
         this.context = Objects.requireNonNull(context, "context");
+        this.checkBytesRef = checkBytsRef;
         this.global = global;
     }
 
@@ -56,6 +58,7 @@ public class UPMClassLoader extends ClassLoader {
                 return true;
 
             tweakingPipeline.add(tweaker);
+            tweaker.onRegister(this);
 
             relaxWaitingTweakers();
 
@@ -87,6 +90,7 @@ public class UPMClassLoader extends ClassLoader {
                 {
                     source = src;
                     entry = e.get();
+
                     break;
                 }
             }
@@ -112,61 +116,79 @@ public class UPMClassLoader extends ClassLoader {
             throw new ClassNotFoundException(name, e);
         }
 
-        TWEAK:
-        synchronized (tweakerLock)
-        {
-            if (postTweakStart(context, name, byts))
+        if (postTweakStart(context, name, byts))
+            postTweakCancelled(context, name, byts);
+        else
+            synchronized (tweakerLock)
             {
-                postTweakCancelled(context, name, byts);
+                Set<String> cancelledTweakers = new HashSet<>();
 
-                break TWEAK;
-            }
+                TWEAKER_WORKFLOW:
+                for (ClassTweaker tweaker : tweakingPipeline)
+                {
+                    if (!cancelledTweakers.isEmpty()) // check if depending tweaker cancelled
+                        for (String dependency : tweaker.getDependencies())
+                            if (cancelledTweakers.contains(dependency))
+                            {
+                                cancelledTweakers.add(tweaker.getName());
 
-            Set<String> cancelledTweakers = new HashSet<>();
+                                postTweakerCancelled(context, name, byts, tweaker,
+                                        ClassTweakEvent.TweakerCancelled.Cause.DEPENDENCY);
 
-            TWEAKER_WORKFLOW:
-            for (ClassTweaker tweaker : tweakingPipeline)
-            {
-                if (!cancelledTweakers.isEmpty()) // check if depending tweaker cancelled
-                    for (String dependency : tweaker.getDependencies())
-                        if (cancelledTweakers.contains(dependency))
+                                continue TWEAKER_WORKFLOW;
+                            }
+
+                    if (postTweakerEnter(context, name, byts, tweaker))
+                    {
+                        cancelledTweakers.add(tweaker.getName());
+
+                        postTweakerCancelled(context, name, byts, tweaker,
+                                ClassTweakEvent.TweakerCancelled.Cause.EVENT);
+
+                        continue;
+                    }
+
+                    try {
+                        byte[] oldRef = byts;
+
+                        byts = tweaker.tweak(byts);
+
+                        if (checkBytesRef && (byts == oldRef)) // check byte array ref
+                            postTweakerIdenticalBytesRef(context, name, byts, tweaker);
+                    } catch (Exception e) {
+                        if (postTweakerFailure(context, name, byts, tweaker, e))
                         {
                             cancelledTweakers.add(tweaker.getName());
 
-                            postTweakerCancelled(context, name, byts, tweaker,
-                                    ClassTweakEvent.TweakerCancelled.Cause.DEPENDENCY);
+                            postTweakerFailureIgnored(context, name, byts, tweaker, e);
 
-                            continue TWEAKER_WORKFLOW;
+                            continue;
                         }
 
-                if (postTweakerEnter(context, name, byts, tweaker))
-                {
-                    cancelledTweakers.add(tweaker.getName());
+                        invalidClasses.add(name);
 
-                    postTweakerCancelled(context, name, byts, tweaker,
-                            ClassTweakEvent.TweakerCancelled.Cause.EVENT);
-
-                    continue;
-                }
-
-                try {
-                    byte[] oldRef = byts;
-
-                    byts = tweaker.tweak(byts);
-
-                    if (byts == oldRef) // check byte array ref
-                        postTweakerIdenticalBytesRef(context, name, byts, tweaker);
-                } catch (Exception e) {
-                    // TODO Post exception and stop tweaking stage
+                        throw new ClassNotFoundException(name, e);
+                    }
                 }
             }
 
-            // TODO Tweaking operation
+        // TODO Check class name
+
+        try {
+            clazz = this.defineClass(name, byts, 0, byts.length);
+        } catch (Exception e) {
+            if ((clazz = classCache.get(name)) != null) // concurrent failure maybe, just mute
+                return clazz;
+
+            postClassMountFailure(this, name, byts, e);
+
+            invalidClasses.add(name);
+            throw new ClassNotFoundException(name, e);
         }
 
-        // TODO
+        classCache.put(name, clazz);
 
-        return null;
+        return clazz;
     }
 
     public static boolean postTweakStart(@Nonnull UPMContext context,
@@ -217,6 +239,39 @@ public class UPMClassLoader extends ClassLoader {
     {
         context.getEventBus().post(
                 new ClassTweakEvent.TweakerIdenticalBytesRefWarning(context, className, classBytes, tweaker));
+    }
+
+    public static boolean postTweakerFailure(@Nonnull UPMContext context,
+                                             @Nonnull String className,
+                                             @Nonnull byte[] classBytes,
+                                             @Nonnull ClassTweaker tweaker,
+                                             @Nonnull Exception exception)
+    {
+        ClassTweakEvent.TweakerFailure event =
+                new ClassTweakEvent.TweakerFailure(context, className, classBytes, tweaker, exception);
+
+        context.getEventBus().post(event);
+
+        return event.isCancelled();
+    }
+
+    public static void postTweakerFailureIgnored(@Nonnull UPMContext context,
+                                                 @Nonnull String className,
+                                                 @Nonnull byte[] classBytes,
+                                                 @Nonnull ClassTweaker tweaker,
+                                                 @Nonnull Exception exception)
+    {
+        context.getEventBus().post(
+                new ClassTweakEvent.TweakerFailureIgnored(context, className, classBytes, tweaker, exception));
+    }
+
+    public static void postClassMountFailure(@Nonnull UPMClassLoader classLoader,
+                                             @Nonnull String className,
+                                             @Nonnull byte[] classBytes,
+                                             @Nonnull Exception exception)
+    {
+        classLoader.getContext().getEventBus().post(
+                new UPMClassLoaderEvent.ClassMountFailure(classLoader, className, classBytes, exception));
     }
 
     boolean isDependencyAvailable(String dependency)
@@ -278,6 +333,11 @@ public class UPMClassLoader extends ClassLoader {
         }
     }
 
+    public boolean ifCheckBytesRef()
+    {
+        return checkBytesRef;
+    }
+
     public @Nonnull Optional<Source> getSource(String name)
     {
         return Optional.ofNullable(this.sources.get(name));
@@ -299,6 +359,8 @@ public class UPMClassLoader extends ClassLoader {
     }
 
     private final boolean global;
+
+    private final boolean checkBytesRef;
 
     private final UPMContext context;
 
