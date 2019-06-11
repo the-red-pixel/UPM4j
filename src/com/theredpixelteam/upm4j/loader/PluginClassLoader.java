@@ -7,6 +7,7 @@ import com.theredpixelteam.upm4j.loader.event.PluginClassLoaderEvent;
 import com.theredpixelteam.upm4j.loader.source.Source;
 import com.theredpixelteam.upm4j.loader.source.SourceEntry;
 import com.theredpixelteam.upm4j.loader.tweaker.ClassTweaker;
+import com.theredpixelteam.upm4j.loader.tweaker.ClassTweakerNamespace;
 import com.theredpixelteam.upm4j.loader.tweaker.event.ClassTweakEvent;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 
@@ -18,47 +19,20 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.jar.Manifest;
 
 public class PluginClassLoader extends ClassLoader {
-    public PluginClassLoader(@Nonnull UPMContext context, boolean checkBytsRef, boolean global)
+    public PluginClassLoader(@Nonnull UPMContext context,
+                             @Nonnull ClassTweakerNamespace tweakers,
+                             boolean checkBytsRef,
+                             boolean global)
     {
         this.context = Objects.requireNonNull(context, "context");
+        this.tweakers = Objects.requireNonNull(tweakers, "tweakers");
         this.checkBytesRef = checkBytsRef;
         this.global = global;
     }
 
-    public @Nonnull Optional<ClassTweaker> getTweaker(@Nonnull String name)
+    public @Nonnull ClassTweakerNamespace getTweakers()
     {
-        return Optional.ofNullable(tweakerMap.get(Objects.requireNonNull(name)));
-    }
-
-    public boolean registerTweaker(@Nonnull ClassTweaker tweaker)
-    {
-        synchronized (tweakerLock)
-        {
-            if (tweakerMap.putIfAbsent(tweaker.getName(), tweaker) != null)
-                return false;
-
-            Pair<ClassTweaker, Set<String>> tweakerMark = null;
-            for (String dependency : tweaker.getDependencies())
-            {
-                if (isDependencyAvailable(dependency))
-                    continue;
-
-                if (tweakerMark == null)
-                    tweakerMark = Pair.of(tweaker, new HashSet<>());
-
-                tweakerMark.second().add(dependency);
-            }
-
-            if (tweakerMark != null)
-                return true;
-
-            tweakingPipeline.add(tweaker);
-            tweaker.onRegister(this);
-
-            relaxWaitingTweakers();
-
-            return true;
-        }
+        return tweakers;
     }
 
     @Override
@@ -114,12 +88,12 @@ public class PluginClassLoader extends ClassLoader {
         if (postTweakStart(context, name, byts))
             postTweakCancelled(context, name, byts);
         else
-            synchronized (tweakerLock)
+            synchronized (tweakers.getTweakerLock())
             {
                 Set<String> cancelledTweakers = new HashSet<>();
 
                 TWEAKER_WORKFLOW:
-                for (ClassTweaker tweaker : tweakingPipeline)
+                for (ClassTweaker tweaker : tweakers)
                 {
                     if (!cancelledTweakers.isEmpty()) // check if depending tweaker cancelled
                         for (String dependency : tweaker.getDependencies())
@@ -269,41 +243,6 @@ public class PluginClassLoader extends ClassLoader {
                 new PluginClassLoaderEvent.ClassMountFailure(classLoader, className, classBytes, exception));
     }
 
-    boolean isDependencyAvailable(String dependency)
-    {
-        ClassTweaker dependedTweaker;
-        if ((dependedTweaker = tweakerMap.get(dependency)) != null)
-            if (tweakingPipeline.contains(dependedTweaker))
-                return true;
-
-        return false;
-    }
-
-    void relaxWaitingTweakers()
-    {
-        if (tweakersWaitingForDependencies.isEmpty())
-            return;
-
-        ListIterator<Pair<ClassTweaker, Set<String>>> iterator =
-                tweakersWaitingForDependencies.listIterator();
-
-        while (iterator.hasNext())
-        {
-            Pair<ClassTweaker, Set<String>> tweakerMark = iterator.next();
-
-            ClassTweaker tweaker = tweakerMark.first();
-            Set<String> depSet = tweakerMark.second();
-
-            depSet.removeIf(this::isDependencyAvailable);
-
-            if (depSet.isEmpty())
-            {
-                iterator.remove();
-                tweakingPipeline.add(tweaker);
-            }
-        }
-    }
-
     public boolean addSource(Source source)
     {
         synchronized (sourceLock)
@@ -345,13 +284,7 @@ public class PluginClassLoader extends ClassLoader {
 
     private final Set<PluginAttribution> attachmentSet = new HashSet<>();
 
-    private final LinkedList<Pair<ClassTweaker, Set<String>>> tweakersWaitingForDependencies = new LinkedList<>();
-
-    private final LinkedHashSet<ClassTweaker> tweakingPipeline = new LinkedHashSet<>();
-
-    private final Map<String, ClassTweaker> tweakerMap = new HashMap<>();
-
-    private final Object tweakerLock = new Object();
+    private final ClassTweakerNamespace tweakers;
 
     private final Map<String, Source> sources = new HashMap<>();
 
