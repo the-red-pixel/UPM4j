@@ -2,14 +2,14 @@ package com.theredpixelteam.upm4j.loader.event;
 
 import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.event.UPMEvent;
-import com.theredpixelteam.upm4j.loader.UPMClassLoader;
+import com.theredpixelteam.upm4j.loader.PluginClassLoader;
 
 import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-public class UPMClassLoaderEvent implements UPMEvent {
-    protected UPMClassLoaderEvent(@Nonnull UPMClassLoader classLoader)
+public class PluginClassLoaderEvent implements UPMEvent {
+    protected PluginClassLoaderEvent(@Nonnull PluginClassLoader classLoader)
     {
         this.classLoader = Objects.requireNonNull(classLoader, "classLoader");
     }
@@ -20,16 +20,17 @@ public class UPMClassLoaderEvent implements UPMEvent {
         return classLoader.getContext();
     }
 
-    public @Nonnull UPMClassLoader getClassLoader()
+    public @Nonnull
+    PluginClassLoader getClassLoader()
     {
         return classLoader;
     }
 
-    private final UPMClassLoader classLoader;
+    private final PluginClassLoader classLoader;
 
-    public static class ClassMountFailure extends UPMClassLoaderEvent
+    public static class ClassMountFailure extends PluginClassLoaderEvent
     {
-        public ClassMountFailure(@Nonnull UPMClassLoader classLoader,
+        public ClassMountFailure(@Nonnull PluginClassLoader classLoader,
                                  @Nonnull String className,
                                  @Nonnull byte[] byts,
                                  @Nonnull Exception cause)

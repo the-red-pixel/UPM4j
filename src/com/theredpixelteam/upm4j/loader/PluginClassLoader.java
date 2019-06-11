@@ -3,7 +3,7 @@ package com.theredpixelteam.upm4j.loader;
 import com.theredpixelteam.redtea.util.Optional;
 import com.theredpixelteam.redtea.util.Pair;
 import com.theredpixelteam.upm4j.UPMContext;
-import com.theredpixelteam.upm4j.loader.event.UPMClassLoaderEvent;
+import com.theredpixelteam.upm4j.loader.event.PluginClassLoaderEvent;
 import com.theredpixelteam.upm4j.loader.source.Source;
 import com.theredpixelteam.upm4j.loader.source.SourceEntry;
 import com.theredpixelteam.upm4j.loader.tweaker.ClassTweaker;
@@ -17,8 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.jar.Manifest;
 
-public class UPMClassLoader extends ClassLoader {
-    public UPMClassLoader(@Nonnull UPMContext context, boolean checkBytsRef, boolean global)
+public class PluginClassLoader extends ClassLoader {
+    public PluginClassLoader(@Nonnull UPMContext context, boolean checkBytsRef, boolean global)
     {
         this.context = Objects.requireNonNull(context, "context");
         this.checkBytesRef = checkBytsRef;
@@ -28,11 +28,6 @@ public class UPMClassLoader extends ClassLoader {
     public @Nonnull Optional<ClassTweaker> getTweaker(@Nonnull String name)
     {
         return Optional.ofNullable(tweakerMap.get(Objects.requireNonNull(name)));
-    }
-
-    public boolean hasTweaker(@Nonnull String name)
-    {
-        return tweakerMap.containsKey(Objects.requireNonNull(name));
     }
 
     public boolean registerTweaker(@Nonnull ClassTweaker tweaker)
@@ -265,13 +260,13 @@ public class UPMClassLoader extends ClassLoader {
                 new ClassTweakEvent.TweakerFailureIgnored(context, className, classBytes, tweaker, exception));
     }
 
-    public static void postClassMountFailure(@Nonnull UPMClassLoader classLoader,
+    public static void postClassMountFailure(@Nonnull PluginClassLoader classLoader,
                                              @Nonnull String className,
                                              @Nonnull byte[] classBytes,
                                              @Nonnull Exception exception)
     {
         classLoader.getContext().getEventBus().post(
-                new UPMClassLoaderEvent.ClassMountFailure(classLoader, className, classBytes, exception));
+                new PluginClassLoaderEvent.ClassMountFailure(classLoader, className, classBytes, exception));
     }
 
     boolean isDependencyAvailable(String dependency)
@@ -314,22 +309,6 @@ public class UPMClassLoader extends ClassLoader {
         synchronized (sourceLock)
         {
             return sources.putIfAbsent(source.getName(), source) != null;
-        }
-    }
-
-    public boolean removeSource(Source source)
-    {
-        synchronized (sourceLock)
-        {
-            return this.sources.remove(source.getName(), source);
-        }
-    }
-
-    public boolean removeSource(String name)
-    {
-        synchronized (sourceLock)
-        {
-            return this.sources.remove(name) != null;
         }
     }
 

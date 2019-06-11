@@ -22,7 +22,7 @@ public class PluginConstructor {
         this.context = Objects.requireNonNull(context);
 
         this.source = Objects.requireNonNull(source, "source");
-        this.classLoader = context.getClassLoaderProvider().provide();
+        this.classLoader = context.getClassLoaderProvider().provide(context);
 
         this.entryDiscoverer = context.getEntryDiscoverer();
         this.instancePolicy = context.getInstancePolicy();
@@ -43,7 +43,7 @@ public class PluginConstructor {
         return entryDiscoverer;
     }
 
-    public @Nonnull UPMClassLoader getClassLoader()
+    public @Nonnull PluginClassLoader getClassLoader()
     {
         return classLoader;
     }
@@ -195,7 +195,7 @@ public class PluginConstructor {
 
     private final PluginEntryDiscoverer entryDiscoverer;
 
-    private final UPMClassLoader classLoader;
+    private final PluginClassLoader classLoader;
 
     private final UPMContext context;
 

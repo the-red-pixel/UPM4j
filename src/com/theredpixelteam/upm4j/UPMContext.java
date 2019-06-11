@@ -16,7 +16,7 @@ import java.util.Objects;
 @SuppressWarnings("all")
 public class UPMContext {
     UPMContext(@Nullable String name,
-               @Nonnull UPMClassLoaderProvider classLoaderProvider,
+               @Nonnull PluginClassLoaderProvider classLoaderProvider,
                @Nonnull PluginFileDiscoveringPolicy fileDiscoveringPolicy,
                @Nonnull PluginInstancePolicy instancePolicy,
                @Nonnull PluginEntryDiscoverer entryDiscoverer,
@@ -37,7 +37,8 @@ public class UPMContext {
                 new EventBus() : new EventBus(eventBusExceptionHandler);
     }
 
-    public @Nonnull UPMClassLoaderProvider getClassLoaderProvider()
+    public @Nonnull
+    PluginClassLoaderProvider getClassLoaderProvider()
     {
         return classLoaderProvider;
     }
@@ -101,7 +102,7 @@ public class UPMContext {
 
     private final PluginEntryDiscoverer entryDiscoverer;
 
-    private final UPMClassLoaderProvider classLoaderProvider;
+    private final PluginClassLoaderProvider classLoaderProvider;
 
     private final PluginStateTree pluginStateTree;
 
@@ -147,7 +148,7 @@ public class UPMContext {
             return this;
         }
 
-        public @Nonnull Builder classLoaderPolicy(@Nonnull UPMClassLoaderProvider classLoaderProvider)
+        public @Nonnull Builder classLoaderPolicy(@Nonnull PluginClassLoaderProvider classLoaderProvider)
         {
             this.classLoaderProvider = Objects.requireNonNull(classLoaderProvider);
             return this;
@@ -182,7 +183,8 @@ public class UPMContext {
             return name;
         }
 
-        public @Nullable UPMClassLoaderProvider getClassLoaderProvider()
+        public @Nullable
+        PluginClassLoaderProvider getClassLoaderProvider()
         {
             return classLoaderProvider;
         }
@@ -257,7 +259,7 @@ public class UPMContext {
 
         private PluginEntryDiscoverer entryDiscoverer;
 
-        private UPMClassLoaderProvider classLoaderProvider;
+        private PluginClassLoaderProvider classLoaderProvider;
 
         private PluginStateTree pluginStateTree;
 
