@@ -11,7 +11,8 @@ public class ClassTweakerNamespace implements Iterable<ClassTweaker> {
     {
     }
 
-    public @Nonnull ClassTweakerNamespace duplicate()
+    @Override
+    public @Nonnull ClassTweakerNamespace clone()
     {
         synchronized (tweakerLock)
         {
