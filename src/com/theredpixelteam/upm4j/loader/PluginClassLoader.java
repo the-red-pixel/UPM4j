@@ -1,7 +1,6 @@
 package com.theredpixelteam.upm4j.loader;
 
 import com.theredpixelteam.redtea.util.Optional;
-import com.theredpixelteam.redtea.util.Pair;
 import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.loader.event.PluginClassLoaderEvent;
 import com.theredpixelteam.upm4j.loader.source.Source;

@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-public class PluginClassLoaderEvent implements UPMEvent {
+public abstract class PluginClassLoaderEvent implements UPMEvent {
     protected PluginClassLoaderEvent(@Nonnull PluginClassLoader classLoader)
     {
         this.classLoader = Objects.requireNonNull(classLoader, "classLoader");

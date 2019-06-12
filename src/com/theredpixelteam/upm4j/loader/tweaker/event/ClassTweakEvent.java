@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-public class ClassTweakEvent implements UPMEvent {
+public abstract class ClassTweakEvent implements UPMEvent {
     protected ClassTweakEvent(@Nonnull UPMContext context,
                               @Nonnull String className,
                               @Nonnull byte[] classBytes)
@@ -40,7 +40,7 @@ public class ClassTweakEvent implements UPMEvent {
 
     private final String className;
 
-    public static class Cancellable extends ClassTweakEvent implements UPMEvent.Cancellable
+    public static abstract class Cancellable extends ClassTweakEvent implements UPMEvent.Cancellable
     {
         protected Cancellable(@Nonnull UPMContext context,
                               @Nonnull String className,
@@ -84,7 +84,7 @@ public class ClassTweakEvent implements UPMEvent {
         }
     }
 
-    public static class TweakerEvent extends ClassTweakEvent
+    public static abstract class TweakerEvent extends ClassTweakEvent
     {
         protected TweakerEvent(@Nonnull UPMContext context,
                                @Nonnull String className,
@@ -103,7 +103,7 @@ public class ClassTweakEvent implements UPMEvent {
         private final ClassTweaker tweaker;
     }
 
-    public static class CancellableTweakerEvent extends TweakerEvent implements UPMEvent.Cancellable
+    public static abstract class CancellableTweakerEvent extends TweakerEvent implements UPMEvent.Cancellable
     {
         protected CancellableTweakerEvent(@Nonnull UPMContext context,
                                           @Nonnull String className,
@@ -215,6 +215,4 @@ public class ClassTweakEvent implements UPMEvent {
             super(context, className, classBytes, tweaker);
         }
     }
-
-    // TODO
 }

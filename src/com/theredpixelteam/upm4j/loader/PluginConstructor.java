@@ -1,8 +1,10 @@
 package com.theredpixelteam.upm4j.loader;
 
 import com.theredpixelteam.redtea.util.Optional;
+import com.theredpixelteam.redtea.util.Pair;
 import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.loader.attribution.processor.Barrier;
+import com.theredpixelteam.upm4j.loader.event.PluginClassLoadStageEvent;
 import com.theredpixelteam.upm4j.loader.event.PluginEntrySearchStageEvent;
 import com.theredpixelteam.upm4j.loader.event.PluginVerificationStageEvent;
 import com.theredpixelteam.upm4j.loader.exception.PluginInstancePolicyViolationException;
@@ -11,9 +13,7 @@ import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Objects;
+import java.util.*;
 
 public class PluginConstructor {
     public PluginConstructor(@Nonnull UPMContext context,
@@ -26,6 +26,8 @@ public class PluginConstructor {
 
         this.entryDiscoverer = context.getEntryDiscoverer();
         this.instancePolicy = context.getInstancePolicy();
+
+        this.classLoader.addSource(source);
     }
 
     public @Nonnull Source getSource()
@@ -145,6 +147,30 @@ public class PluginConstructor {
 
         nextStage(); // VERIFICATION -> CLASS_LOAD
 
+        Map<String, Pair<PluginAttribution, Class<?>>> loadCache =
+                new HashMap<>();
+
+        for (PluginAttribution attribution : attributions)
+        {
+            Class<?> mainClassInstance;
+
+            postClassLoadStart(context, classLoader, attribution);
+
+            try {
+                mainClassInstance = classLoader.loadClass(attribution.getMainClass());
+            } catch (ClassNotFoundException e) {
+                postClassLoadFailure(context, classLoader, attribution, e);
+
+                continue;
+            }
+
+            loadCache.put(attribution.getIdentity(), Pair.of(attribution, mainClassInstance));
+
+            postClassLoadPassed(context, classLoader, attribution);
+        }
+
+        nextStage(); // CLASS_LOAD -> CONSTRUCTION
+
         // TODO
     }
 
@@ -185,6 +211,31 @@ public class PluginConstructor {
         context.getEventBus().post(new PluginVerificationStageEvent.Skipped(context));
     }
 
+    public static void postClassLoadStart(@Nonnull UPMContext context,
+                                          @Nonnull PluginClassLoader classLoader,
+                                          @Nonnull PluginAttribution attribution)
+    {
+        context.getEventBus().post(
+                new PluginClassLoadStageEvent.Start(context, classLoader, attribution));
+    }
+
+    public static void postClassLoadFailure(@Nonnull UPMContext context,
+                                            @Nonnull PluginClassLoader classLoader,
+                                            @Nonnull PluginAttribution attribution,
+                                            @Nonnull Exception cause)
+    {
+        context.getEventBus().post(
+                new PluginClassLoadStageEvent.Failure(context, classLoader, attribution, cause));
+    }
+
+    public static void postClassLoadPassed(@Nonnull UPMContext context,
+                                           @Nonnull PluginClassLoader classLoader,
+                                           @Nonnull PluginAttribution attribution)
+    {
+        context.getEventBus().post(
+                new PluginClassLoadStageEvent.Passed(context, classLoader, attribution));
+    }
+
     private int stage = STAGE_INITIALIZED;
 
     private final Source source;
@@ -206,4 +257,6 @@ public class PluginConstructor {
     public static final int STAGE_VERIFICATION = 0x04;
 
     public static final int STAGE_CLASS_LOAD = 0x08;
+
+    public static final int STAGE_CONSTRUCTION = 0x10;
 }
