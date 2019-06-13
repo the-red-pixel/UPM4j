@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.SubscriberExceptionHandler;
 import com.theredpixelteam.redtea.util.Optional;
 import com.theredpixelteam.redtea.util.ShouldNotReachHere;
+import com.theredpixelteam.upm4j.inject.PluginInjection;
 import com.theredpixelteam.upm4j.invoke.ClassicInvokerProviders;
 import com.theredpixelteam.upm4j.invoke.InvokerProvider;
 import com.theredpixelteam.upm4j.loader.*;
@@ -22,6 +23,7 @@ public class UPMContext {
                @Nonnull PluginEntryDiscoverer entryDiscoverer,
                @Nonnull InvokerProvider invokerProvider,
                @Nonnull PluginStateTree pluginStateTree,
+               @Nonnull PluginInjection injection,
                @Nonnull PluginVerificationManager pluginVerificationManager,
                @Nullable SubscriberExceptionHandler eventBusExceptionHandler)
     {
@@ -32,6 +34,7 @@ public class UPMContext {
         this.entryDiscoverer = entryDiscoverer;
         this.invokerProvider = invokerProvider;
         this.pluginStateTree = pluginStateTree;
+        this.injection = injection;
         this.pluginVerificationManager = pluginVerificationManager;
         this.eventBus = eventBusExceptionHandler == null ?
                 new EventBus() : new EventBus(eventBusExceptionHandler);
@@ -85,6 +88,11 @@ public class UPMContext {
         return pluginVerificationManager;
     }
 
+    public @Nonnull PluginInjection getInjection()
+    {
+        return injection;
+    }
+
     public static @Nonnull Builder builder()
     {
         return new Builder();
@@ -105,6 +113,8 @@ public class UPMContext {
     private final PluginClassLoaderProvider classLoaderProvider;
 
     private final PluginStateTree pluginStateTree;
+
+    private final PluginInjection injection;
 
     private final PluginVerificationManager pluginVerificationManager;
 
@@ -172,6 +182,12 @@ public class UPMContext {
             return this;
         }
 
+        public @Nonnull Builder injection(@Nonnull PluginInjection injection)
+        {
+            this.injection = injection;
+            return this;
+        }
+
         public @Nullable Builder eventBusExceptionHandler(@Nullable SubscriberExceptionHandler handler)
         {
             this.eventBusExceptionHandler = handler;
@@ -221,6 +237,11 @@ public class UPMContext {
             return pluginStateTree;
         }
 
+        public @Nullable PluginInjection getInjection()
+        {
+            return injection;
+        }
+
         public @Nonnull Builder addVerifier(PluginVerifier verifier)
         {
             pluginVerificationManager.addVerifier(verifier);
@@ -242,6 +263,7 @@ public class UPMContext {
                     Objects.requireNonNull(entryDiscoverer, "EntryDiscoverer"),
                     Objects.requireNonNull(invokerProvider, "InvokerProvider"),
                     Objects.requireNonNull(pluginStateTree, "PluginStateTree"),
+                    Objects.requireNonNull(injection, "PluginInjection"),
                     pluginVerificationManager,
                     eventBusExceptionHandler
             );
@@ -262,6 +284,8 @@ public class UPMContext {
         private PluginClassLoaderProvider classLoaderProvider;
 
         private PluginStateTree pluginStateTree;
+
+        private PluginInjection injection;
 
         private final PluginVerificationManager pluginVerificationManager = new PluginVerificationManager();
     }

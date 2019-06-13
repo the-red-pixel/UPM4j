@@ -12,6 +12,9 @@ public final class PluginInjection {
         this.priority = priority;
         this.patterns = new PluginInjectionPattern[patterns.size()];
 
+        if (patterns.isEmpty())
+            return;
+
         int i;
         switch (priority)
         {
@@ -51,9 +54,17 @@ public final class PluginInjection {
         return new Builder();
     }
 
+    public static @Nonnull PluginInjection empty()
+    {
+        return EMPTY;
+    }
+
     private final PluginInjectionPattern[] patterns;
 
     private final PatternPriority priority;
+
+    private static final PluginInjection EMPTY =
+            new PluginInjection(PatternPriority.FIRST_IN_FIRST, new LinkedHashMap<>());
 
     public static enum PatternPriority
     {

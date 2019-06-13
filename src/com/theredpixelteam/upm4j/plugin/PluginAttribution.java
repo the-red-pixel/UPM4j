@@ -90,10 +90,62 @@ public class PluginAttribution {
         return Optional.of((T) attr);
     }
 
+    public synchronized void initInstance(@Nonnull Object instance)
+    {
+        Objects.requireNonNull(instance);
+
+        if (this.instance != null)
+            throw new IllegalStateException("Already constructed");
+
+        this.instance = instance;
+    }
+
+    public boolean isConstructed()
+    {
+        return instance != null;
+    }
+
+    public @Nonnull Object getInstance()
+    {
+        if (instance == null)
+            throw new IllegalStateException("Not yet constructed");
+
+        return instance;
+    }
+
+    public synchronized void initPlugin(@Nonnull Plugin plugin)
+    {
+        Objects.requireNonNull(plugin);
+
+        if (this.plugin != null)
+            throw new IllegalStateException("Already initialized");
+
+        assert plugin.getAttribution() == this;
+
+        this.plugin = plugin;
+    }
+
+    public boolean isInitialized()
+    {
+        return this.plugin != null;
+    }
+
+    public @Nonnull Plugin getPlugin()
+    {
+        if (plugin == null)
+            throw new IllegalStateException("Not yet initialized");
+
+        return plugin;
+    }
+
     public static Builder builder()
     {
         return new Builder();
     }
+
+    private Plugin plugin;
+
+    private Object instance;
 
     private final String mainClass;
 
