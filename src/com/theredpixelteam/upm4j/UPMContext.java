@@ -8,7 +8,6 @@ import com.theredpixelteam.upm4j.inject.PluginInjection;
 import com.theredpixelteam.upm4j.invoke.ClassicInvokerProviders;
 import com.theredpixelteam.upm4j.invoke.InvokerProvider;
 import com.theredpixelteam.upm4j.loader.*;
-import com.theredpixelteam.upm4j.plugin.PluginStateTree;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -22,7 +21,6 @@ public class UPMContext {
                @Nonnull PluginInstancePolicy instancePolicy,
                @Nonnull PluginEntryDiscoverer entryDiscoverer,
                @Nonnull InvokerProvider invokerProvider,
-               @Nonnull PluginStateTree pluginStateTree,
                @Nonnull PluginInjection injection,
                @Nonnull PluginVerificationManager pluginVerificationManager,
                @Nullable SubscriberExceptionHandler eventBusExceptionHandler)
@@ -33,7 +31,6 @@ public class UPMContext {
         this.instancePolicy = instancePolicy;
         this.entryDiscoverer = entryDiscoverer;
         this.invokerProvider = invokerProvider;
-        this.pluginStateTree = pluginStateTree;
         this.injection = injection;
         this.pluginVerificationManager = pluginVerificationManager;
         this.eventBus = eventBusExceptionHandler == null ?
@@ -66,11 +63,6 @@ public class UPMContext {
     public @Nonnull InvokerProvider getInvokerProvider()
     {
         return invokerProvider;
-    }
-
-    public @Nonnull PluginStateTree getPluginStateTree()
-    {
-        return pluginStateTree;
     }
 
     public @Nonnull Optional<String> getName()
@@ -111,8 +103,6 @@ public class UPMContext {
     private final PluginEntryDiscoverer entryDiscoverer;
 
     private final PluginClassLoaderProvider classLoaderProvider;
-
-    private final PluginStateTree pluginStateTree;
 
     private final PluginInjection injection;
 
@@ -167,12 +157,6 @@ public class UPMContext {
         public @Nonnull Builder instancePolicy(@Nonnull PluginInstancePolicy instancePolicy)
         {
             this.instancePolicy = Objects.requireNonNull(instancePolicy);
-            return this;
-        }
-
-        public @Nonnull Builder pluginStateTree(@Nonnull PluginStateTree pluginStateTree)
-        {
-            this.pluginStateTree = Objects.requireNonNull(pluginStateTree);
             return this;
         }
 
@@ -232,11 +216,6 @@ public class UPMContext {
             return eventBusExceptionHandler;
         }
 
-        public @Nullable PluginStateTree getPluginStateTree()
-        {
-            return pluginStateTree;
-        }
-
         public @Nullable PluginInjection getInjection()
         {
             return injection;
@@ -262,7 +241,6 @@ public class UPMContext {
                     Objects.requireNonNull(instancePolicy, "InstancePolicy"),
                     Objects.requireNonNull(entryDiscoverer, "EntryDiscoverer"),
                     Objects.requireNonNull(invokerProvider, "InvokerProvider"),
-                    Objects.requireNonNull(pluginStateTree, "PluginStateTree"),
                     Objects.requireNonNull(injection, "PluginInjection"),
                     pluginVerificationManager,
                     eventBusExceptionHandler
@@ -282,8 +260,6 @@ public class UPMContext {
         private PluginEntryDiscoverer entryDiscoverer;
 
         private PluginClassLoaderProvider classLoaderProvider;
-
-        private PluginStateTree pluginStateTree;
 
         private PluginInjection injection;
 
