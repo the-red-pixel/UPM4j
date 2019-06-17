@@ -10,7 +10,6 @@ import com.theredpixelteam.upm4j.loader.event.PluginClassLoadStageEvent;
 import com.theredpixelteam.upm4j.loader.event.PluginConstructionStageEvent;
 import com.theredpixelteam.upm4j.loader.event.PluginEntrySearchStageEvent;
 import com.theredpixelteam.upm4j.loader.event.PluginVerificationStageEvent;
-import com.theredpixelteam.upm4j.loader.exception.PluginInstancePolicyViolationException;
 import com.theredpixelteam.upm4j.loader.source.Source;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 

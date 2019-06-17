@@ -1,4 +1,4 @@
-package com.theredpixelteam.upm4j.loader.exception;
+package com.theredpixelteam.upm4j.loader;
 
 public class PluginInstancePolicyViolationException extends Exception {
     public PluginInstancePolicyViolationException(String msg)

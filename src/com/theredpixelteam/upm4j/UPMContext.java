@@ -8,6 +8,7 @@ import com.theredpixelteam.upm4j.inject.PluginInjection;
 import com.theredpixelteam.upm4j.invoke.ClassicInvokerProviders;
 import com.theredpixelteam.upm4j.invoke.InvokerProvider;
 import com.theredpixelteam.upm4j.loader.*;
+import com.theredpixelteam.upm4j.plugin.PluginStateHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -22,6 +23,7 @@ public class UPMContext {
                @Nonnull PluginEntryDiscoverer entryDiscoverer,
                @Nonnull InvokerProvider invokerProvider,
                @Nonnull PluginInjection injection,
+               @Nonnull PluginStateHandler stateHandler,
                @Nonnull PluginVerificationManager pluginVerificationManager,
                @Nullable SubscriberExceptionHandler eventBusExceptionHandler)
     {
@@ -32,6 +34,7 @@ public class UPMContext {
         this.entryDiscoverer = entryDiscoverer;
         this.invokerProvider = invokerProvider;
         this.injection = injection;
+        this.stateHandler = stateHandler;
         this.pluginVerificationManager = pluginVerificationManager;
         this.eventBus = eventBusExceptionHandler == null ?
                 new EventBus() : new EventBus(eventBusExceptionHandler);
@@ -80,6 +83,11 @@ public class UPMContext {
         return pluginVerificationManager;
     }
 
+    public @Nonnull PluginStateHandler getStateHandler()
+    {
+        return stateHandler;
+    }
+
     public @Nonnull PluginInjection getInjection()
     {
         return injection;
@@ -105,6 +113,8 @@ public class UPMContext {
     private final PluginClassLoaderProvider classLoaderProvider;
 
     private final PluginInjection injection;
+
+    private final PluginStateHandler stateHandler;
 
     private final PluginVerificationManager pluginVerificationManager;
 
@@ -168,7 +178,13 @@ public class UPMContext {
 
         public @Nonnull Builder injection(@Nonnull PluginInjection injection)
         {
-            this.injection = injection;
+            this.injection = Objects.requireNonNull(injection);
+            return this;
+        }
+
+        public @Nonnull Builder stateHandler(@Nonnull PluginStateHandler stateHandler)
+        {
+            this.stateHandler = Objects.requireNonNull(stateHandler);
             return this;
         }
 
@@ -221,7 +237,7 @@ public class UPMContext {
             return injection;
         }
 
-        public @Nonnull Builder addVerifier(PluginVerifier verifier)
+        public @Nonnull Builder addVerifier(@Nonnull PluginVerifier verifier)
         {
             pluginVerificationManager.addVerifier(verifier);
             return this;
@@ -242,6 +258,7 @@ public class UPMContext {
                     Objects.requireNonNull(entryDiscoverer, "EntryDiscoverer"),
                     Objects.requireNonNull(invokerProvider, "InvokerProvider"),
                     Objects.requireNonNull(injection, "PluginInjection"),
+                    Objects.requireNonNull(stateHandler, "PluginStateHandler"),
                     pluginVerificationManager,
                     eventBusExceptionHandler
             );
@@ -260,6 +277,8 @@ public class UPMContext {
         private PluginEntryDiscoverer entryDiscoverer;
 
         private PluginClassLoaderProvider classLoaderProvider;
+
+        private PluginStateHandler stateHandler;
 
         private PluginInjection injection;
 

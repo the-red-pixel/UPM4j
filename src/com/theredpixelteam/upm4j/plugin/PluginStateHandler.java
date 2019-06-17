@@ -13,13 +13,13 @@ public interface PluginStateHandler {
 
     public boolean canUnload(@Nonnull Plugin plugin);
 
-    public boolean tryLoad(@Nonnull Plugin plugin);
+    public boolean tryLoad(@Nonnull Plugin plugin) throws PluginTargetException;
 
-    public boolean tryEnable(@Nonnull Plugin plugin);
+    public boolean tryEnable(@Nonnull Plugin plugin) throws PluginTargetException;
 
-    public boolean tryDisable(@Nonnull Plugin plugin);
+    public boolean tryDisable(@Nonnull Plugin plugin) throws PluginTargetException;
 
-    public boolean tryUnload(@Nonnull Plugin plugin);
+    public boolean tryUnload(@Nonnull Plugin plugin) throws PluginTargetException;
 
     public boolean isEnabled(@Nonnull PluginState state);
 
