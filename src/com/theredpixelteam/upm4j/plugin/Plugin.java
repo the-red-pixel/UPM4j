@@ -1,5 +1,7 @@
 package com.theredpixelteam.upm4j.plugin;
 
+import com.theredpixelteam.upm4j.UPMContext;
+
 import javax.annotation.Nonnull;
 
 public interface Plugin {
@@ -20,4 +22,6 @@ public interface Plugin {
     public boolean enable();
 
     public boolean disable();
+
+    public @Nonnull UPMContext getContext();
 }

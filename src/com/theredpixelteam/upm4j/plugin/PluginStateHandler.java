@@ -1,9 +1,13 @@
 package com.theredpixelteam.upm4j.plugin;
 
 import javax.annotation.Nonnull;
+import java.util.Optional;
 
 public interface PluginStateHandler {
-    public @Nonnull PluginState trySetState(@Nonnull Plugin plugin, @Nonnull PluginState nextState);
+    public @Nonnull PluginState trySetState(@Nonnull Plugin plugin,
+                                            @Nonnull PluginState nextState);
+
+    public @Nonnull PluginState getInitialState();
 
     public boolean canLoad(@Nonnull Plugin plugin);
 
@@ -13,15 +17,19 @@ public interface PluginStateHandler {
 
     public boolean canUnload(@Nonnull Plugin plugin);
 
-    public boolean tryLoad(@Nonnull Plugin plugin) throws PluginTargetException;
+    public @Nonnull Optional<PluginState> tryLoad(@Nonnull Plugin plugin)
+            throws PluginTargetException;
 
-    public boolean tryEnable(@Nonnull Plugin plugin) throws PluginTargetException;
+    public @Nonnull Optional<PluginState> tryEnable(@Nonnull Plugin plugin)
+            throws PluginTargetException;
 
-    public boolean tryDisable(@Nonnull Plugin plugin) throws PluginTargetException;
+    public @Nonnull Optional<PluginState> tryDisable(@Nonnull Plugin plugin)
+            throws PluginTargetException;
 
-    public boolean tryUnload(@Nonnull Plugin plugin) throws PluginTargetException;
+    public @Nonnull Optional<PluginState> tryUnload(@Nonnull Plugin plugin)
+            throws PluginTargetException;
+
+    public boolean isLoaded(@Nonnull PluginState state);
 
     public boolean isEnabled(@Nonnull PluginState state);
-
-    public boolean isDisabled(@Nonnull PluginState state);
 }

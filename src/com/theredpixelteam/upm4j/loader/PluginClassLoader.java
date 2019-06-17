@@ -19,12 +19,11 @@ import java.util.jar.Manifest;
 
 public class PluginClassLoader extends ClassLoader {
     public PluginClassLoader(@Nonnull UPMContext context,
-                             @Nonnull ClassTweakerNamespace tweakers,
                              boolean checkBytsRef,
                              boolean global)
     {
         this.context = Objects.requireNonNull(context, "context");
-        this.tweakers = Objects.requireNonNull(tweakers, "tweakers");
+        this.tweakers = context.getTweakers().clone();
         this.checkBytesRef = checkBytsRef;
         this.global = global;
     }

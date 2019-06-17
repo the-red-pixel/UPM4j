@@ -8,6 +8,7 @@ import com.theredpixelteam.upm4j.inject.PluginInjection;
 import com.theredpixelteam.upm4j.invoke.ClassicInvokerProviders;
 import com.theredpixelteam.upm4j.invoke.InvokerProvider;
 import com.theredpixelteam.upm4j.loader.*;
+import com.theredpixelteam.upm4j.loader.tweaker.ClassTweakerNamespace;
 import com.theredpixelteam.upm4j.plugin.PluginStateHandler;
 
 import javax.annotation.Nonnull;
@@ -25,6 +26,7 @@ public class UPMContext {
                @Nonnull PluginInjection injection,
                @Nonnull PluginStateHandler stateHandler,
                @Nonnull PluginVerificationManager pluginVerificationManager,
+               @Nonnull ClassTweakerNamespace tweakers,
                @Nullable SubscriberExceptionHandler eventBusExceptionHandler)
     {
         this.name = name;
@@ -35,6 +37,7 @@ public class UPMContext {
         this.invokerProvider = invokerProvider;
         this.injection = injection;
         this.stateHandler = stateHandler;
+        this.tweakers = tweakers;
         this.pluginVerificationManager = pluginVerificationManager;
         this.eventBus = eventBusExceptionHandler == null ?
                 new EventBus() : new EventBus(eventBusExceptionHandler);
@@ -93,6 +96,11 @@ public class UPMContext {
         return injection;
     }
 
+    public @Nonnull ClassTweakerNamespace getTweakers()
+    {
+        return tweakers;
+    }
+
     public static @Nonnull Builder builder()
     {
         return new Builder();
@@ -115,6 +123,8 @@ public class UPMContext {
     private final PluginInjection injection;
 
     private final PluginStateHandler stateHandler;
+
+    private final ClassTweakerNamespace tweakers;
 
     private final PluginVerificationManager pluginVerificationManager;
 
@@ -188,6 +198,12 @@ public class UPMContext {
             return this;
         }
 
+        public @Nonnull Builder tweakers(@Nonnull ClassTweakerNamespace tweakers)
+        {
+            this.tweakers = Objects.requireNonNull(tweakers);
+            return this;
+        }
+
         public @Nullable Builder eventBusExceptionHandler(@Nullable SubscriberExceptionHandler handler)
         {
             this.eventBusExceptionHandler = handler;
@@ -237,6 +253,11 @@ public class UPMContext {
             return injection;
         }
 
+        public @Nullable ClassTweakerNamespace getTweakers()
+        {
+            return tweakers;
+        }
+
         public @Nonnull Builder addVerifier(@Nonnull PluginVerifier verifier)
         {
             pluginVerificationManager.addVerifier(verifier);
@@ -260,6 +281,7 @@ public class UPMContext {
                     Objects.requireNonNull(injection, "PluginInjection"),
                     Objects.requireNonNull(stateHandler, "PluginStateHandler"),
                     pluginVerificationManager,
+                    Objects.requireNonNull(tweakers, "tweakers"),
                     eventBusExceptionHandler
             );
         }
@@ -281,6 +303,8 @@ public class UPMContext {
         private PluginStateHandler stateHandler;
 
         private PluginInjection injection;
+
+        private ClassTweakerNamespace tweakers;
 
         private final PluginVerificationManager pluginVerificationManager = new PluginVerificationManager();
     }
