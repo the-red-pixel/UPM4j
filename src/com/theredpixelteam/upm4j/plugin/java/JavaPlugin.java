@@ -20,7 +20,9 @@ public class JavaPlugin implements Plugin {
         this.context = Objects.requireNonNull(context, "context");
         this.mainClass = Objects.requireNonNull(mainClass, "mainClass");
         this.attribution = Objects.requireNonNull(attribution, "attribution");
+
         this.handler = context.getStateHandler();
+        this.state = handler.getInitialState();
     }
 
     @Override
@@ -57,7 +59,7 @@ public class JavaPlugin implements Plugin {
                                    FunctionWithThrowable<Plugin, Optional<PluginState>, PluginTargetException> procedure,
                                    PluginStateChangeEvent.Action action)
     {
-        if (pretest.test(this))
+        if (!pretest.test(this))
         {
             postStateChangeRejected(this, action, state);
 
