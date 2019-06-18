@@ -1,6 +1,5 @@
 package com.theredpixelteam.upm4j.invoke;
 
-import com.theredpixelteam.upm4j.loader.PluginInvocationPolicy;
 import org.kucro3.jam2.invoke.ConstructorInvoker;
 import org.kucro3.jam2.invoke.FieldInvoker;
 import org.kucro3.jam2.invoke.MethodInvoker;
@@ -15,6 +14,4 @@ public interface InvokerProvider {
     public FieldInvoker provideFieldInvoker(Field field);
 
     public ConstructorInvoker provideConstructorInvoker(Constructor<?> constructor);
-
-    public PluginInvocationPolicy getPolicy();
 }

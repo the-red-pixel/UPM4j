@@ -64,7 +64,11 @@ public final class PluginInjection {
     private final PatternPriority priority;
 
     private static final PluginInjection EMPTY =
-            new PluginInjection(PatternPriority.FIRST_IN_FIRST, new LinkedHashMap<>());
+            new PluginInjection(PatternPriority.FIRST_IN_FIRST, new LinkedHashMap<Class<?>[], PluginInjectionPattern>() {
+                {
+                    put(new Class<?>[0], PluginInjectionPattern.empty());
+                }
+            });
 
     public static enum PatternPriority
     {

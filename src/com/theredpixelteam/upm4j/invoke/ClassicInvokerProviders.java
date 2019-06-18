@@ -1,6 +1,5 @@
 package com.theredpixelteam.upm4j.invoke;
 
-import com.theredpixelteam.upm4j.loader.PluginInvocationPolicy;
 import org.kucro3.jam2.invoke.ConstructorInvoker;
 import org.kucro3.jam2.invoke.FieldInvoker;
 import org.kucro3.jam2.invoke.MethodInvoker;
@@ -32,12 +31,6 @@ public class ClassicInvokerProviders {
         {
             return ConstructorInvoker.newInvokerByASM(constructor);
         }
-
-        @Override
-        public PluginInvocationPolicy getPolicy()
-        {
-            return PluginInvocationPolicy.ASM_INVOKE;
-        }
     };
 
     public static final InvokerProvider REFLECTION = new InvokerProvider() {
@@ -57,12 +50,6 @@ public class ClassicInvokerProviders {
         public ConstructorInvoker provideConstructorInvoker(Constructor<?> constructor)
         {
             return ConstructorInvoker.newInvokerByReflection(constructor);
-        }
-
-        @Override
-        public PluginInvocationPolicy getPolicy()
-        {
-            return PluginInvocationPolicy.REFLECTION;
         }
     };
 }

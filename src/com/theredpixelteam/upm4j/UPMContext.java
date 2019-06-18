@@ -142,22 +142,6 @@ public class UPMContext {
         {
         }
 
-        public @Nonnull Builder invocationPolicy(@Nonnull PluginInvocationPolicy invocationPolicy)
-        {
-            Objects.requireNonNull(invocationPolicy);
-
-            switch (invocationPolicy)
-            {
-                case ASM_INVOKE:
-                    return invokerProvider(ClassicInvokerProviders.ASM);
-
-                case REFLECTION:
-                    return invokerProvider(ClassicInvokerProviders.REFLECTION);
-            }
-
-            throw new ShouldNotReachHere();
-        }
-
         public @Nonnull Builder invokerProvider(@Nonnull InvokerProvider invokerProvider)
         {
             this.invokerProvider = Objects.requireNonNull(invokerProvider);
@@ -176,7 +160,7 @@ public class UPMContext {
             return this;
         }
 
-        public @Nonnull Builder classLoaderPolicy(@Nonnull PluginClassLoaderProvider classLoaderProvider)
+        public @Nonnull Builder classLoaderProvider(@Nonnull PluginClassLoaderProvider classLoaderProvider)
         {
             this.classLoaderProvider = Objects.requireNonNull(classLoaderProvider);
             return this;
