@@ -11,6 +11,7 @@ import com.theredpixelteam.upm4j.loader.tweaker.event.ClassTweakEvent;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,14 +19,23 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.jar.Manifest;
 
 public class PluginClassLoader extends ClassLoader {
-    public PluginClassLoader(@Nonnull UPMContext context,
+    public PluginClassLoader(@Nullable ClassLoader parent,
+                             @Nonnull UPMContext context,
                              boolean checkBytsRef,
                              boolean global)
     {
+        super(parent);
         this.context = Objects.requireNonNull(context, "context");
         this.tweakers = context.getTweakers().clone();
         this.checkBytesRef = checkBytsRef;
         this.global = global;
+    }
+
+    public PluginClassLoader(@Nonnull UPMContext context,
+                             boolean checkBytsRef,
+                             boolean global)
+    {
+        this(null, context, checkBytsRef, global);
     }
 
     public @Nonnull ClassTweakerNamespace getTweakers()
