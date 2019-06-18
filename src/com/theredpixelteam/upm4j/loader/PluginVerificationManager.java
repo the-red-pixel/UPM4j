@@ -3,6 +3,7 @@ package com.theredpixelteam.upm4j.loader;
 import com.theredpixelteam.redtea.util.Optional;
 import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.loader.event.PluginVerificationStageEvent;
+import com.theredpixelteam.upm4j.loader.exception.PluginVerifierException;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 
 import javax.annotation.Nonnull;
@@ -11,6 +12,7 @@ import java.util.*;
 public class PluginVerificationManager {
     public boolean verify(@Nonnull UPMContext context,
                           @Nonnull PluginAttribution attribution)
+            throws PluginVerifierException
     {
         Objects.requireNonNull(context, "context");
         Objects.requireNonNull(attribution, "attribution");
@@ -32,7 +34,17 @@ public class PluginVerificationManager {
                 continue; // pass on cancellation
             }
 
-            PluginVerifier.Result result = verifier.verify(attribution);
+            PluginVerifier.Result result;
+            try {
+                result = verifier.verify(attribution);
+            } catch (Exception e) {
+                if (!postVerificationFailed(context, attribution, verifier, e))
+                    throw new PluginVerifierException(verifier, e);
+
+                postVerificationFailureCancelled(context, attribution, verifier, e);
+
+                continue; // pass on cancellation
+            }
 
             if (result.isPassed())
                 postVerificationPassed(context, attribution, verifier, result);
@@ -146,6 +158,28 @@ public class PluginVerificationManager {
         context.getEventBus()
                 .post(new PluginVerificationStageEvent.VerificationRejectionCancelled(
                         context, attribution, verifier, result));
+    }
+
+    public static boolean postVerificationFailed(@Nonnull UPMContext context,
+                                                 @Nonnull PluginAttribution attribution,
+                                                 @Nonnull PluginVerifier verifier,
+                                                 @Nonnull Exception cause)
+    {
+        PluginVerificationStageEvent.VerificationFailed event =
+                new PluginVerificationStageEvent.VerificationFailed(context, attribution, verifier, cause);
+
+        context.getEventBus().post(event);
+
+        return event.isCancelled();
+    }
+
+    public static void postVerificationFailureCancelled(@Nonnull UPMContext context,
+                                                        @Nonnull PluginAttribution attribution,
+                                                        @Nonnull PluginVerifier verifier,
+                                                        @Nonnull Exception cause)
+    {
+        context.getEventBus().post(
+                new PluginVerificationStageEvent.VerificationFailureCancelled(context, attribution, verifier, cause));
     }
 
     private final Map<String, PluginVerifier> verifierMap = new HashMap<>();

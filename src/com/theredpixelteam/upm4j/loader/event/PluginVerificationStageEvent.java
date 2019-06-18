@@ -73,6 +73,24 @@ public abstract class PluginVerificationStageEvent implements UPMEvent {
         }
     }
 
+    public static class Failed extends PluginVerificationStageEvent
+    {
+        public Failed(@Nonnull UPMContext context,
+                      @Nonnull PluginAttribution plugin,
+                      @Nonnull Exception cause)
+        {
+            super(context, plugin);
+            this.cause = Objects.requireNonNull(cause, "cause");
+        }
+
+        public @Nonnull Exception getCause()
+        {
+            return cause;
+        }
+
+        private final Exception cause;
+    }
+
     public static abstract class VerificationEvent extends PluginVerificationStageEvent
     {
         protected VerificationEvent(@Nonnull UPMContext context,
@@ -133,6 +151,44 @@ public abstract class PluginVerificationStageEvent implements UPMEvent {
         {
             super(context, plugin, verifier);
         }
+    }
+
+    public static class VerificationFailed extends CancellableVerificationEvent
+    {
+        public VerificationFailed(@Nonnull UPMContext context,
+                                  @Nonnull PluginAttribution plugin,
+                                  @Nonnull PluginVerifier verifier,
+                                  @Nonnull Exception cause)
+        {
+            super(context, plugin, verifier);
+            this.cause = Objects.requireNonNull(cause, "cause");
+        }
+
+        public @Nonnull Exception getCause()
+        {
+            return cause;
+        }
+
+        private final Exception cause;
+    }
+
+    public static class VerificationFailureCancelled extends CancellableVerificationEvent
+    {
+        public VerificationFailureCancelled(@Nonnull UPMContext context,
+                                            @Nonnull PluginAttribution plugin,
+                                            @Nonnull PluginVerifier verifier,
+                                            @Nonnull Exception cause)
+        {
+            super(context, plugin, verifier);
+            this.cause = Objects.requireNonNull(cause, "cause");
+        }
+
+        public @Nonnull Exception getCause()
+        {
+            return cause;
+        }
+
+        private final Exception cause;
     }
 
     public static class VerificationPassed extends VerificationEvent

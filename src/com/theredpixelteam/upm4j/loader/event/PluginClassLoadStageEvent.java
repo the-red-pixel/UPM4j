@@ -40,6 +40,30 @@ public abstract class PluginClassLoadStageEvent implements UPMEvent {
 
     private final UPMContext context;
 
+    public static abstract class Cancellable extends PluginClassLoadStageEvent implements UPMEvent.Cancellable
+    {
+        protected Cancellable(@Nonnull UPMContext context,
+                              @Nonnull PluginClassLoader classLoader,
+                              @Nonnull PluginAttribution plugin)
+        {
+            super(context, classLoader, plugin);
+        }
+
+        @Override
+        public boolean isCancelled()
+        {
+            return cancelled;
+        }
+
+        @Override
+        public void cancel()
+        {
+            cancelled = true;
+        }
+
+        private boolean cancelled;
+    }
+
     public static class Start extends PluginClassLoadStageEvent
     {
         public Start(@Nonnull UPMContext context,
@@ -70,13 +94,60 @@ public abstract class PluginClassLoadStageEvent implements UPMEvent {
         private final Exception cause;
     }
 
+    public static class Loaded extends Cancellable
+    {
+        public Loaded(@Nonnull UPMContext context,
+                      @Nonnull PluginClassLoader classLoader,
+                      @Nonnull PluginAttribution plugin,
+                      @Nonnull Class<?> mainClass)
+        {
+            super(context, classLoader, plugin);
+            this.mainClass = Objects.requireNonNull(mainClass, "mainClass");
+        }
+
+        public @Nonnull Class<?> getMainClass()
+        {
+            return mainClass;
+        }
+
+        private final Class<?> mainClass;
+    }
+
+    public static class Cancelled extends PluginClassLoadStageEvent
+    {
+        public Cancelled(@Nonnull UPMContext context,
+                         @Nonnull PluginClassLoader classLoader,
+                         @Nonnull PluginAttribution plugin,
+                         @Nonnull Class<?> mainClass)
+        {
+            super(context, classLoader, plugin);
+            this.mainClass = Objects.requireNonNull(mainClass, "mainClass");
+        }
+
+        public @Nonnull Class<?> getMainClass()
+        {
+            return mainClass;
+        }
+
+        private final Class<?> mainClass;
+    }
+
     public static class Passed extends PluginClassLoadStageEvent
     {
         public Passed(@Nonnull UPMContext context,
                       @Nonnull PluginClassLoader classLoader,
-                      @Nonnull PluginAttribution plugin)
+                      @Nonnull PluginAttribution plugin,
+                      @Nonnull Class<?> mainClass)
         {
             super(context, classLoader, plugin);
+            this.mainClass = Objects.requireNonNull(mainClass, "mainClass");
         }
+
+        public @Nonnull Class<?> getMainClass()
+        {
+            return mainClass;
+        }
+
+        private final Class<?> mainClass;
     }
 }

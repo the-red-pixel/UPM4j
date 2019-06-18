@@ -9,6 +9,7 @@ import com.theredpixelteam.upm4j.invoke.ClassicInvokerProviders;
 import com.theredpixelteam.upm4j.invoke.InvokerProvider;
 import com.theredpixelteam.upm4j.loader.*;
 import com.theredpixelteam.upm4j.loader.tweaker.ClassTweakerNamespace;
+import com.theredpixelteam.upm4j.plugin.PluginNamespace;
 import com.theredpixelteam.upm4j.plugin.PluginStateHandler;
 
 import javax.annotation.Nonnull;
@@ -101,6 +102,11 @@ public class UPMContext {
         return tweakers;
     }
 
+    public @Nonnull PluginNamespace getPluginNamespace()
+    {
+        return pluginNamespace;
+    }
+
     public static @Nonnull Builder builder()
     {
         return new Builder();
@@ -127,6 +133,8 @@ public class UPMContext {
     private final ClassTweakerNamespace tweakers;
 
     private final PluginVerificationManager pluginVerificationManager;
+
+    private final PluginNamespace pluginNamespace = new PluginNamespace();
 
     public static final class Builder
     {

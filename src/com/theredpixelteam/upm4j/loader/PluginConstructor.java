@@ -6,15 +6,15 @@ import com.theredpixelteam.redtea.util.Pair;
 import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.inject.PluginInjector;
 import com.theredpixelteam.upm4j.loader.attribution.processor.Barrier;
-import com.theredpixelteam.upm4j.loader.event.PluginClassLoadStageEvent;
-import com.theredpixelteam.upm4j.loader.event.PluginConstructionStageEvent;
-import com.theredpixelteam.upm4j.loader.event.PluginEntrySearchStageEvent;
-import com.theredpixelteam.upm4j.loader.event.PluginVerificationStageEvent;
+import com.theredpixelteam.upm4j.loader.event.*;
+import com.theredpixelteam.upm4j.loader.exception.*;
 import com.theredpixelteam.upm4j.loader.source.Source;
+import com.theredpixelteam.upm4j.plugin.Plugin;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
+import com.theredpixelteam.upm4j.plugin.PluginNamespace;
+import com.theredpixelteam.upm4j.plugin.java.JavaPlugin;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -58,39 +58,24 @@ public class PluginConstructor {
         return context;
     }
 
-    public @Nonnull Optional<Exception> getLastException()
-    {
-        return Optional.ofNullable(lastException);
-    }
-
-    public boolean hasLastException()
-    {
-        return lastException != null;
-    }
-
-    public int getStage()
+    public @Nonnull Stage getStage()
     {
         return stage;
     }
 
     private void clearState()
     {
-        lastException = null;
-        stage = STAGE_INITIALIZED;
+        stage = Stage.INITIALIZED;
     }
 
     private void nextStage()
     {
-        stage <<= 1;
-    }
-
-    private void failed(Exception e)
-    {
-        lastException = e;
+        stage = stage.nextStage();
     }
 
     @SuppressWarnings("unchecked")
     public synchronized void construct()
+            throws PluginMountingException
     {
         clearState();
 
@@ -104,11 +89,10 @@ public class PluginConstructor {
         Collection<PluginAttribution> attributions;
         try {
             attributions = entryDiscoverer.search(context, source, barrier);
-        } catch (IOException e) {
-            failed(e);
+        } catch (PluginMountingException e) {
             postSearchStageFailed(context, source, entryDiscoverer, barrier, e);
 
-            return;
+            throw e;
         }
 
         if (restricted && attributions.size() > 1)
@@ -117,10 +101,9 @@ public class PluginConstructor {
                     = new PluginInstancePolicyViolationException(
                             "Multiple plugin entries found when the instance policy is RESTRICTED_SINGLE");
 
-            failed(instancePolicyViolation);
             postSearchStageFailed(context, source, entryDiscoverer, barrier, instancePolicyViolation);
 
-            return;
+            throw instancePolicyViolation;
         }
 
         postSearchStagePassed(context, source, entryDiscoverer, barrier, attributions);
@@ -136,13 +119,19 @@ public class PluginConstructor {
             {
                 PluginAttribution attribution = iter.next();
 
-                if (verificationManager.verify(context, attribution))
-                    postVerificationStagePassed(context, attribution);
-                else
-                {
-                    iter.remove();
+                try {
+                    if (verificationManager.verify(context, attribution)) // unsafe point
+                        postVerificationStagePassed(context, attribution);
+                    else
+                    {
+                        iter.remove();
 
-                    postVerificationStageRejected(context, attribution);
+                        postVerificationStageRejected(context, attribution);
+                    }
+                } catch (PluginVerifierException e) {
+                    postVerificationStageFailed(context, attribution, e);
+
+                    throw e;
                 }
             }
         }
@@ -167,9 +156,16 @@ public class PluginConstructor {
                 continue;
             }
 
+            if (postClassLoaded(context, classLoader, attribution, mainClassInstance))
+            {
+                postClassLoadCancelled(context, classLoader, attribution, mainClassInstance);
+
+                continue;
+            }
+
             loadCache.add(Pair.of(attribution, mainClassInstance));
 
-            postClassLoadPassed(context, classLoader, attribution);
+            postClassLoadPassed(context, classLoader, attribution, mainClassInstance);
         }
 
         nextStage(); // CLASS_LOAD -> CONSTRUCTION
@@ -213,7 +209,27 @@ public class PluginConstructor {
 
         nextStage(); // CONSTRUCTION -> AFTER_CONSTRUCTION
 
-        // TODO
+        PluginNamespace namespace = context.getPluginNamespace();
+
+        for (Pair<PluginAttribution, Class<?>> pair : loadCache)
+        {
+            PluginAttribution attribution = pair.first();
+
+            if (!attribution.isConstructed())
+                continue;
+
+            JavaPlugin plugin = new JavaPlugin(context, pair.second(), attribution);
+
+            try {
+                namespace.registerPlugin(plugin);
+            } catch (PluginMountingException e) {
+                postAfterConstructionRegistrationFailed(context, namespace, attribution, e);
+
+                throw e;
+            }
+
+            postAfterConstructionRegistrationPassed(context, namespace, plugin);
+        }
 
         nextStage(); // AFTER_CONSTRUCTION -> FINISHED
     }
@@ -255,6 +271,13 @@ public class PluginConstructor {
         context.getEventBus().post(new PluginVerificationStageEvent.Skipped(context));
     }
 
+    public static void postVerificationStageFailed(@Nonnull UPMContext context,
+                                                   @Nonnull PluginAttribution attribution,
+                                                   @Nonnull Exception cause)
+    {
+        context.getEventBus().post(new PluginVerificationStageEvent.Failed(context, attribution, cause));
+    }
+
     public static void postClassLoadStart(@Nonnull UPMContext context,
                                           @Nonnull PluginClassLoader classLoader,
                                           @Nonnull PluginAttribution attribution)
@@ -272,12 +295,35 @@ public class PluginConstructor {
                 new PluginClassLoadStageEvent.Failure(context, classLoader, attribution, cause));
     }
 
-    public static void postClassLoadPassed(@Nonnull UPMContext context,
-                                           @Nonnull PluginClassLoader classLoader,
-                                           @Nonnull PluginAttribution attribution)
+    public static boolean postClassLoaded(@Nonnull UPMContext context,
+                                          @Nonnull PluginClassLoader classLoader,
+                                          @Nonnull PluginAttribution attribution,
+                                          @Nonnull Class<?> mainClass)
+    {
+        PluginClassLoadStageEvent.Loaded event =
+                new PluginClassLoadStageEvent.Loaded(context, classLoader, attribution, mainClass);
+
+        context.getEventBus().post(event);
+
+        return event.isCancelled();
+    }
+
+    public static void postClassLoadCancelled(@Nonnull UPMContext context,
+                                              @Nonnull PluginClassLoader classLoader,
+                                              @Nonnull PluginAttribution attribution,
+                                              @Nonnull Class<?> mainClass)
     {
         context.getEventBus().post(
-                new PluginClassLoadStageEvent.Passed(context, classLoader, attribution));
+                new PluginClassLoadStageEvent.Cancelled(context, classLoader, attribution, mainClass));
+    }
+
+    public static void postClassLoadPassed(@Nonnull UPMContext context,
+                                           @Nonnull PluginClassLoader classLoader,
+                                           @Nonnull PluginAttribution attribution,
+                                           @Nonnull Class<?> mainClass)
+    {
+        context.getEventBus().post(
+                new PluginClassLoadStageEvent.Passed(context, classLoader, attribution, mainClass));
     }
 
     public static void postConstructionStart(@Nonnull UPMContext context,
@@ -313,11 +359,26 @@ public class PluginConstructor {
                 new PluginConstructionStageEvent.InjectionMismatch(context, attribution, mainClass));
     }
 
-    private int stage = STAGE_INITIALIZED;
+    public static void postAfterConstructionRegistrationPassed(@Nonnull UPMContext context,
+                                                               @Nonnull PluginNamespace namespace,
+                                                               @Nonnull Plugin plugin)
+    {
+        context.getEventBus().post(
+                new PluginAfterConstructionStageEvent.RegistrationPassed(context, namespace, plugin));
+    }
+
+    public static void postAfterConstructionRegistrationFailed(@Nonnull UPMContext context,
+                                                               @Nonnull PluginNamespace namespace,
+                                                               @Nonnull PluginAttribution attribution,
+                                                               @Nonnull Exception cause)
+    {
+        context.getEventBus().post(
+                new PluginAfterConstructionStageEvent.RegistrationFailed(context, namespace, attribution, cause));
+    }
+
+    private Stage stage = Stage.INITIALIZED;
 
     private final Source source;
-
-    private Exception lastException;
 
     private final PluginInstancePolicy instancePolicy;
 
@@ -327,17 +388,19 @@ public class PluginConstructor {
 
     private final UPMContext context;
 
-    public static final int STAGE_INITIALIZED = 0x01;
+    public static enum Stage
+    {
+        INITIALIZED,
+        ENTRY_SEARCH,
+        VERIFICATION,
+        CLASS_LOAD,
+        CONSTRUCTION,
+        AFTER_CONSTRUCTION,
+        FINISHED;
 
-    public static final int STAGE_ENTRY_SEARCH = 0x02;
-
-    public static final int STAGE_VERIFICATION = 0x04;
-
-    public static final int STAGE_CLASS_LOAD = 0x08;
-
-    public static final int STAGE_CONSTRUCTION = 0x10;
-
-    public static final int STAGE_AFTER_CONSTRUCTION = 0x20;
-
-    public static final int STAGE_FINISHED = 0x40;
+        public Stage nextStage()
+        {
+            return values()[ordinal() + 1];
+        }
+    }
 }

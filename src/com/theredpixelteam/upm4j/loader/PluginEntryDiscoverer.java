@@ -4,6 +4,8 @@ import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.loader.attribution.AttributionWorkflow;
 import com.theredpixelteam.upm4j.loader.attribution.processor.*;
 import com.theredpixelteam.upm4j.loader.event.PluginEntrySearchStageEvent;
+import com.theredpixelteam.upm4j.loader.exception.PluginMountingException;
+import com.theredpixelteam.upm4j.loader.exception.PluginSourceIOException;
 import com.theredpixelteam.upm4j.loader.source.Source;
 import com.theredpixelteam.upm4j.loader.source.SourceEntry;
 import com.theredpixelteam.upm4j.loader.source.SourceEntryNameFilter;
@@ -28,7 +30,7 @@ public abstract class PluginEntryDiscoverer {
     public abstract @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
                                                                   @Nonnull Source source,
                                                                   @Nonnull Barrier barrier)
-            throws IOException;
+            throws PluginMountingException;
 
     public @Nonnull Type getType()
     {
@@ -355,7 +357,7 @@ public abstract class PluginEntryDiscoverer {
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
                                                              @Nonnull Source source,
                                                              @Nonnull Barrier barrier)
-                throws IOException
+                throws PluginMountingException
         {
             requireNonNull(context, source, barrier);
 
@@ -397,7 +399,12 @@ public abstract class PluginEntryDiscoverer {
                     continue;
                 }
 
-                processor.process(workflow, name, entry, barrier);
+                try {
+                    processor.process(workflow, name, entry, barrier);
+                } catch (IOException e) {
+                    barrier.block();
+                    throw new PluginSourceIOException(e);
+                }
 
                 postClassEntryProcessPassed(context, source, this, barrier, name, entry);
             }
@@ -435,7 +442,7 @@ public abstract class PluginEntryDiscoverer {
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
                                                              @Nonnull Source source,
                                                              @Nonnull Barrier barrier)
-                throws IOException
+                throws PluginMountingException
         {
             requireNonNull(context, source, barrier);
 
@@ -473,7 +480,12 @@ public abstract class PluginEntryDiscoverer {
                     continue;
                 }
 
-                processor.process(workflow, entry, barrier);
+                try {
+                    processor.process(workflow, entry, barrier);
+                } catch (IOException e) {
+                    barrier.block();
+                    throw new PluginSourceIOException(e);
+                }
 
                 postConfigurationEntryProcessPassed(context, source, this, barrier, entry);
             }
@@ -511,7 +523,7 @@ public abstract class PluginEntryDiscoverer {
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
                                                              @Nonnull Source source,
                                                              @Nonnull Barrier barrier)
-                throws IOException
+                throws PluginMountingException
         {
             requireNonNull(context, source, barrier);
 
@@ -581,7 +593,7 @@ public abstract class PluginEntryDiscoverer {
 
                 } catch (IOException e) {
                     barrier.block();
-                    throw e;
+                    throw new PluginSourceIOException(e);
                 } catch (Exception e) {
                     postEntryScanException(context, source, this, barrier, entry, e);
                 }
@@ -623,7 +635,7 @@ public abstract class PluginEntryDiscoverer {
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
                                                              @Nonnull Source source,
                                                              @Nonnull Barrier barrier)
-                throws IOException
+                throws PluginMountingException
         {
             requireNonNull(context, source, barrier);
 
@@ -679,7 +691,7 @@ public abstract class PluginEntryDiscoverer {
 
                 } catch (IOException e) {
                     barrier.block();
-                    throw e;
+                    throw new PluginSourceIOException(e);
                 } catch (Exception e) {
                     postEntryScanException(context, source, this, barrier, entry, e);
                 }
@@ -706,7 +718,7 @@ public abstract class PluginEntryDiscoverer {
         public @Nonnull Collection<PluginAttribution> search(@Nonnull UPMContext context,
                                                              @Nonnull Source source,
                                                              @Nonnull Barrier barrier)
-                throws IOException
+                throws PluginMountingException
         {
             requireNonNull(context, source, barrier);
 
@@ -719,7 +731,12 @@ public abstract class PluginEntryDiscoverer {
 
             AttributionWorkflow workflow = new AttributionWorkflow(context);
 
-            processor.process(workflow, source, barrier);
+            try {
+                processor.process(workflow, source, barrier);
+            } catch (IOException e) {
+                barrier.block();
+                throw new PluginSourceIOException(e);
+            }
 
             return workflow.buildAll();
         }

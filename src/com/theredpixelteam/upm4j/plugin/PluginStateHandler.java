@@ -1,5 +1,7 @@
 package com.theredpixelteam.upm4j.plugin;
 
+import com.theredpixelteam.upm4j.plugin.exception.PluginTargetException;
+
 import javax.annotation.Nonnull;
 import java.util.Optional;
 

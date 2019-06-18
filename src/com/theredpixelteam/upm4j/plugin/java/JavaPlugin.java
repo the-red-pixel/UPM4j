@@ -6,6 +6,7 @@ import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.plugin.*;
 import com.theredpixelteam.upm4j.plugin.event.PluginStateChangeEvent;
 import com.theredpixelteam.upm4j.plugin.event.PluginStateChangeEvent.Actions;
+import com.theredpixelteam.upm4j.plugin.exception.PluginTargetException;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
@@ -14,13 +15,12 @@ import java.util.Optional;
 public class JavaPlugin implements Plugin {
     public JavaPlugin(@Nonnull UPMContext context,
                       @Nonnull Class<?> mainClass,
-                      @Nonnull PluginAttribution attribution,
-                      @Nonnull PluginStateHandler handler)
+                      @Nonnull PluginAttribution attribution)
     {
         this.context = Objects.requireNonNull(context, "context");
         this.mainClass = Objects.requireNonNull(mainClass, "mainClass");
         this.attribution = Objects.requireNonNull(attribution, "attribution");
-        this.handler = Objects.requireNonNull(handler, "stateHandler");
+        this.handler = context.getStateHandler();
     }
 
     @Override

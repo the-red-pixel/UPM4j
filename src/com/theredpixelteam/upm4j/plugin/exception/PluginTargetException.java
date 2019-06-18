@@ -1,4 +1,4 @@
-package com.theredpixelteam.upm4j.plugin;
+package com.theredpixelteam.upm4j.plugin.exception;
 
 import javax.annotation.Nullable;
 
