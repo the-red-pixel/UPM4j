@@ -6,6 +6,4 @@ import javax.annotation.Nonnull;
 
 public interface PluginClassLoaderProvider {
     public PluginClassLoader provide(@Nonnull UPMContext context);
-
-    public PluginClassLoaderPolicy getPolicy();
 }
