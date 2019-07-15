@@ -46,7 +46,7 @@ public abstract class PluginClassLoaderEvent implements UPMEvent {
             return className;
         }
 
-        public @Nonnull ByteBuffer getClassByts()
+        public @Nonnull ByteBuffer getClassBytes()
         {
             return ByteBuffer.wrap(byts).asReadOnlyBuffer();
         }
@@ -61,5 +61,152 @@ public abstract class PluginClassLoaderEvent implements UPMEvent {
         private final byte[] byts;
 
         private final Exception cause;
+    }
+
+    public static class ClassNameChanged extends PluginClassLoaderEvent
+    {
+        public ClassNameChanged(@Nonnull PluginClassLoader classLoader,
+                                @Nonnull String oldClassName,
+                                @Nonnull String newClassName,
+                                @Nonnull byte[] byts)
+        {
+            super(classLoader);
+
+            this.oldClassName = Objects.requireNonNull(oldClassName, "oldClassName");
+            this.newClassName = Objects.requireNonNull(newClassName, "newClassName");
+            this.byts = Objects.requireNonNull(byts, "classBytes");
+        }
+
+        public void reject()
+        {
+            rejected = true;
+        }
+
+        public boolean isRejected()
+        {
+            return rejected;
+        }
+
+        public @Nonnull String getOldClassName()
+        {
+            return oldClassName;
+        }
+
+        public @Nonnull String getNewClassName()
+        {
+            return newClassName;
+        }
+
+        public @Nonnull byte[] getClassBytes()
+        {
+            return byts;
+        }
+
+        private boolean rejected;
+
+        private final String oldClassName;
+
+        private final String newClassName;
+
+        private final byte[] byts;
+    }
+
+    public static class ClassNameChangeRejected extends PluginClassLoaderEvent
+    {
+        public ClassNameChangeRejected(@Nonnull PluginClassLoader classLoader,
+                                       @Nonnull String oldClassName,
+                                       @Nonnull String newClassName,
+                                       @Nonnull byte[] byts)
+        {
+            super(classLoader);
+
+            this.oldClassName = Objects.requireNonNull(oldClassName, "oldClassName");
+            this.newClassName = Objects.requireNonNull(newClassName, "newClassName");
+            this.byts = Objects.requireNonNull(byts, "classBytes");
+        }
+
+        public @Nonnull String getOldClassName()
+        {
+            return oldClassName;
+        }
+
+        public @Nonnull String getNewClassName()
+        {
+            return newClassName;
+        }
+
+        public @Nonnull byte[] getClassBytes()
+        {
+            return byts;
+        }
+
+        private final String oldClassName;
+
+        private final String newClassName;
+
+        private final byte[] byts;
+    }
+
+    public static class ClassMountPassed extends PluginClassLoaderEvent
+    {
+        public ClassMountPassed(@Nonnull PluginClassLoader classLoader,
+                                @Nonnull Class<?> classInstance)
+        {
+            super(classLoader);
+
+            this.classInstance = Objects.requireNonNull(classInstance, "classInstance");
+        }
+
+        public @Nonnull Class<?> getClassInstance()
+        {
+            return classInstance;
+        }
+
+        private final Class<?> classInstance;
+    }
+
+    public static class PackageDefinitionFailure extends PluginClassLoaderEvent
+    {
+        public PackageDefinitionFailure(@Nonnull PluginClassLoader classLoader,
+                                        @Nonnull String packageName,
+                                        @Nonnull Exception cause)
+        {
+            super(classLoader);
+
+            this.packageName = Objects.requireNonNull(packageName, "package");
+            this.cause = Objects.requireNonNull(cause, "cause");
+        }
+
+        public @Nonnull String getPackageName()
+        {
+            return packageName;
+        }
+
+        public @Nonnull Exception getCause()
+        {
+            return cause;
+        }
+
+        private final String packageName;
+
+        private final Exception cause;
+    }
+
+    public static class PackageDefinitionPassed extends PluginClassLoaderEvent
+    {
+        public PackageDefinitionPassed(@Nonnull PluginClassLoader classLoader,
+                                       @Nonnull Package pack)
+        {
+            super(classLoader);
+
+            this.pack = Objects.requireNonNull(pack, "package");
+        }
+
+        public @Nonnull Package getPackage()
+        {
+            return pack;
+        }
+
+        private final Package pack;
     }
 }

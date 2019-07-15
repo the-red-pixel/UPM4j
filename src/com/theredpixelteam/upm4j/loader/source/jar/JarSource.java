@@ -6,15 +6,46 @@ import com.theredpixelteam.upm4j.loader.source.Source;
 import com.theredpixelteam.upm4j.loader.source.SourceEntry;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.File;
 import java.io.IOException;
+import java.net.JarURLConnection;
+import java.net.URL;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 public class JarSource implements Source {
     public JarSource(@Nonnull JarFile jar)
     {
+        this(jar, null);
+    }
+
+    public JarSource(@Nonnull String name) throws IOException
+    {
+        this(new File(name));
+    }
+
+    public JarSource(@Nonnull String name, boolean verify) throws IOException
+    {
+        this(new File(name), verify);
+    }
+
+    public JarSource(@Nonnull File file) throws IOException
+    {
+        this(new JarFile(file), file.toURI().toURL());
+    }
+
+    public JarSource(@Nonnull File file, boolean verify) throws IOException
+    {
+        this(new JarFile(file, verify), file.toURI().toURL());
+    }
+
+    JarSource(@Nonnull JarFile jar, @Nullable URL url)
+    {
         this.jar = Objects.requireNonNull(jar);
+        this.url = url;
     }
 
     @Override
@@ -39,6 +70,19 @@ public class JarSource implements Source {
             poll();
 
         return Optional.ofNullable(entries.get(Objects.requireNonNull(name)));
+    }
+
+    @Override
+    public @Nonnull Optional<URL> getURL()
+    {
+        return Optional.ofNullable(url);
+    }
+
+    @Override
+    public @Nonnull Optional<Manifest> getManifest()
+            throws IOException
+    {
+        return Optional.of(this.jar.getManifest());
     }
 
     @Override
@@ -74,6 +118,8 @@ public class JarSource implements Source {
     private final Map<String, SourceEntry> entries = new HashMap<>();
 
     private volatile boolean polled = false;
+
+    private final URL url;
 
     protected final JarFile jar;
 }
