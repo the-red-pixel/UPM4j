@@ -86,78 +86,96 @@ public class PluginClassLoader extends ClassLoader {
         int dot = name.indexOf('.');
         String packageName = dot == -1 ? null : name.substring(0, dot);
 
-        if (packageName != null && getPackage(packageName) == null)
-        {
-            try {
-                Manifest manifest;
-                if ((manifest = source.getManifest().orElse(null)) == null)
-                {
-                    Package pac = definePackage(packageName, null, null,
-                                null, null, null, null, null);
-
-                    postPackageDefinitionPassed(this, pac);
-                }
-                else
-                {
-                    // referenced to URLClassLoader
-                    String specTitle = null, specVersion = null, specVendor = null;
-                    String implTitle = null, implVersion = null, implVendor = null;
-                    String sealed = null;
-                    URL sealBase = null;
-
-                    String path = packageName.replace('.', '/') + '/';
-
-                    Attributes attr = manifest.getAttributes(path);
-                    if (attr != null)
+        Package pack;
+        if (packageName != null)
+            if((pack = getPackage(packageName)) == null)
+            {
+                try {
+                    Manifest manifest;
+                    if ((manifest = source.getManifest().orElse(null)) == null)
                     {
-                        specTitle   = attr.getValue(Attributes.Name.SPECIFICATION_TITLE);
-                        specVersion = attr.getValue(Attributes.Name.SPECIFICATION_VERSION);
-                        specVendor  = attr.getValue(Attributes.Name.SPECIFICATION_VENDOR);
-                        implTitle   = attr.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
-                        implVersion = attr.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-                        implVendor  = attr.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
-                        sealed      = attr.getValue(Attributes.Name.SEALED);
+                        pack = definePackage(packageName, null, null,
+                                    null, null, null, null, null);
+
+                        postPackageDefinitionPassed(this, pack);
                     }
-
-                    attr = manifest.getMainAttributes();
-                    if (attr != null)
+                    else
                     {
-                        if (specTitle == null)
-                            specTitle = attr.getValue(Attributes.Name.SPECIFICATION_TITLE);
+                        // referenced to URLClassLoader
+                        String specTitle = null, specVersion = null, specVendor = null;
+                        String implTitle = null, implVersion = null, implVendor = null;
+                        String sealed = null;
+                        URL sealBase = null;
 
-                        if (specVersion == null)
+                        String path = packageName.replace('.', '/') + '/';
+
+                        Attributes attr = manifest.getAttributes(path);
+                        if (attr != null)
+                        {
+                            specTitle   = attr.getValue(Attributes.Name.SPECIFICATION_TITLE);
                             specVersion = attr.getValue(Attributes.Name.SPECIFICATION_VERSION);
-
-                        if (specVendor == null)
-                            specVendor = attr.getValue(Attributes.Name.SPECIFICATION_VENDOR);
-
-                        if (implTitle == null)
-                            implTitle = attr.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
-
-                        if (implVersion == null)
+                            specVendor  = attr.getValue(Attributes.Name.SPECIFICATION_VENDOR);
+                            implTitle   = attr.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
                             implVersion = attr.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+                            implVendor  = attr.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
+                            sealed      = attr.getValue(Attributes.Name.SEALED);
+                        }
 
-                        if (implVendor == null)
-                            implVendor = attr.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
+                        attr = manifest.getMainAttributes();
+                        if (attr != null)
+                        {
+                            if (specTitle == null)
+                                specTitle = attr.getValue(Attributes.Name.SPECIFICATION_TITLE);
 
-                        if (sealed == null)
-                            sealed = attr.getValue(Attributes.Name.SEALED);
+                            if (specVersion == null)
+                                specVersion = attr.getValue(Attributes.Name.SPECIFICATION_VERSION);
+
+                            if (specVendor == null)
+                                specVendor = attr.getValue(Attributes.Name.SPECIFICATION_VENDOR);
+
+                            if (implTitle == null)
+                                implTitle = attr.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
+
+                            if (implVersion == null)
+                                implVersion = attr.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+
+                            if (implVendor == null)
+                                implVendor = attr.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
+
+                            if (sealed == null)
+                                sealed = attr.getValue(Attributes.Name.SEALED);
+                        }
+
+                        Optional<URL> url;
+                        if (Boolean.valueOf(sealed) && (url = source.getURL()).isPresent())
+                            sealBase = url.get();
+
+                        pack = definePackage(name, specTitle, specVersion, specVendor, implTitle, implVersion, implVendor, sealBase);
+
+                        postPackageDefinitionPassed(this, pack);
                     }
+                } catch (IOException | IllegalArgumentException e) {
+                    postPackageDefinitionFailure(this, packageName, e);
 
-                    Optional<URL> url;
-                    if (Boolean.valueOf(sealed) && (url = source.getURL()).isPresent())
-                        sealBase = url.get();
-
-                    Package pack =
-                            definePackage(name, specTitle, specVersion, specVendor, implTitle, implVersion, implVendor, sealBase);
-
-                    postPackageDefinitionPassed(this, pack);
                 }
-            } catch (IOException | IllegalArgumentException e) {
-                postPackageDefinitionFailure(this, packageName, e);
-
             }
-        }
+            else if (pack.isSealed())
+            {
+                Optional<URL> url = source.getURL();
+
+                if (!url.isPresent() || !pack.isSealed(url.get()))
+                {
+                    SecurityException e =
+                            new SecurityException("sealing violation: package " + packageName + " is sealed");
+
+                    postPackageSealingViolation(this, name, pack, e);
+
+                    this.invalidClasses.add(name);
+                    throw e;
+                }
+            }
+            else;
+        else;
 
         byte[] byts;
         try {
@@ -379,6 +397,15 @@ public class PluginClassLoader extends ClassLoader {
     {
         classLoader.getContext().getEventBus().post(
                 new PluginClassLoaderEvent.PackageDefinitionPassed(classLoader, pack));
+    }
+
+    public static void postPackageSealingViolation(@Nonnull PluginClassLoader classLoader,
+                                                   @Nonnull String className,
+                                                   @Nonnull Package pack,
+                                                   @Nonnull Exception exception)
+    {
+        classLoader.getContext().getEventBus().post(
+                new PluginClassLoaderEvent.PackageSealingViolation(classLoader, className, pack, exception));
     }
 
     public boolean addSource(Source source)

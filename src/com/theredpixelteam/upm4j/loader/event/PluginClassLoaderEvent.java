@@ -209,4 +209,40 @@ public abstract class PluginClassLoaderEvent implements UPMEvent {
 
         private final Package pack;
     }
+
+    public static class PackageSealingViolation extends PluginClassLoaderEvent
+    {
+        public PackageSealingViolation(@Nonnull PluginClassLoader classLoader,
+                                       @Nonnull String className,
+                                       @Nonnull Package pack,
+                                       @Nonnull Exception exception)
+        {
+            super(classLoader);
+
+            this.className = Objects.requireNonNull(className, "className");
+            this.pack = Objects.requireNonNull(pack, "package");
+            this.exception = Objects.requireNonNull(exception, "exception");
+        }
+
+        public @Nonnull String getClassName()
+        {
+            return className;
+        }
+
+        public @Nonnull Package getPackage()
+        {
+            return pack;
+        }
+
+        public @Nonnull Exception getException()
+        {
+            return exception;
+        }
+
+        private final String className;
+
+        private final Package pack;
+
+        private final Exception exception;
+    }
 }
