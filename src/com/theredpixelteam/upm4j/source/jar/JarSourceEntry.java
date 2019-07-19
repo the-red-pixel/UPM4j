@@ -1,8 +1,8 @@
-package com.theredpixelteam.upm4j.loader.source.jar;
+package com.theredpixelteam.upm4j.source.jar;
 
 import com.theredpixelteam.redtea.util.io.IOUtils;
-import com.theredpixelteam.upm4j.loader.source.Source;
-import com.theredpixelteam.upm4j.loader.source.SourceEntry;
+import com.theredpixelteam.upm4j.source.Source;
+import com.theredpixelteam.upm4j.source.SourceEntry;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;

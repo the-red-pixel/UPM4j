@@ -8,7 +8,7 @@ import com.theredpixelteam.upm4j.inject.PluginInjector;
 import com.theredpixelteam.upm4j.loader.attribution.processor.Barrier;
 import com.theredpixelteam.upm4j.loader.event.*;
 import com.theredpixelteam.upm4j.loader.exception.*;
-import com.theredpixelteam.upm4j.loader.source.Source;
+import com.theredpixelteam.upm4j.source.Source;
 import com.theredpixelteam.upm4j.plugin.Plugin;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 import com.theredpixelteam.upm4j.plugin.PluginNamespace;

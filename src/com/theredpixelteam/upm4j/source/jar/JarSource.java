@@ -1,15 +1,15 @@
-package com.theredpixelteam.upm4j.loader.source.jar;
+package com.theredpixelteam.upm4j.source.jar;
 
 import com.theredpixelteam.redtea.function.Consumer;
 import com.theredpixelteam.redtea.util.Optional;
-import com.theredpixelteam.upm4j.loader.source.Source;
-import com.theredpixelteam.upm4j.loader.source.SourceEntry;
+import com.theredpixelteam.upm4j.source.Source;
+import com.theredpixelteam.upm4j.source.SourceEntry;
+import com.theredpixelteam.upm4j.source.SourceURLFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.net.JarURLConnection;
 import java.net.URL;
 import java.util.*;
 import java.util.jar.JarEntry;
@@ -45,7 +45,7 @@ public class JarSource implements Source {
     JarSource(@Nonnull JarFile jar, @Nullable URL url)
     {
         this.jar = Objects.requireNonNull(jar);
-        this.url = url;
+        this.url = url == null ? SourceURLFactory.create("jarsource", getName(), this) : url;
     }
 
     @Override
@@ -75,7 +75,7 @@ public class JarSource implements Source {
     @Override
     public @Nonnull Optional<URL> getURL()
     {
-        return Optional.ofNullable(url);
+        return Optional.of(url);
     }
 
     @Override

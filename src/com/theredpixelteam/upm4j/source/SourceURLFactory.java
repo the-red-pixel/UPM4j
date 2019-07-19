@@ -1,6 +1,5 @@
-package com.theredpixelteam.upm4j.url.source;
+package com.theredpixelteam.upm4j.source;
 
-import com.theredpixelteam.upm4j.loader.source.Source;
 import com.theredpixelteam.upm4j.url.URLFactory;
 
 import javax.annotation.Nonnull;

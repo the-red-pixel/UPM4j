@@ -1,4 +1,4 @@
-package com.theredpixelteam.upm4j.loader.source;
+package com.theredpixelteam.upm4j.source;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;

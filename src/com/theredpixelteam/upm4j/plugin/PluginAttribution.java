@@ -1,6 +1,6 @@
 package com.theredpixelteam.upm4j.plugin;
 
-import com.theredpixelteam.upm4j.loader.source.SourceEntry;
+import com.theredpixelteam.upm4j.source.SourceEntry;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

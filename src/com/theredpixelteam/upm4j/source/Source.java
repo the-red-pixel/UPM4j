@@ -1,4 +1,4 @@
-package com.theredpixelteam.upm4j.loader.source;
+package com.theredpixelteam.upm4j.source;
 
 import com.theredpixelteam.redtea.function.BiConsumer;
 import com.theredpixelteam.redtea.function.Consumer;
@@ -71,7 +71,7 @@ public interface Source {
 
     public default @Nonnull Optional<URL> getURL()
     {
-        return Optional.empty();
+        return Optional.of(SourceURLFactory.create("source", getName(), this));
     }
 
     public @Nonnull Optional<SourceEntry> getEntry(@Nonnull String name);

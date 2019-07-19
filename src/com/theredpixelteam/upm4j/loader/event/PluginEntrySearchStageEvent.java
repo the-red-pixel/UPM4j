@@ -4,8 +4,8 @@ import com.theredpixelteam.upm4j.UPMContext;
 import com.theredpixelteam.upm4j.event.UPMEvent;
 import com.theredpixelteam.upm4j.loader.PluginEntryDiscoverer;
 import com.theredpixelteam.upm4j.loader.attribution.processor.Barrier;
-import com.theredpixelteam.upm4j.loader.source.Source;
-import com.theredpixelteam.upm4j.loader.source.SourceEntry;
+import com.theredpixelteam.upm4j.source.Source;
+import com.theredpixelteam.upm4j.source.SourceEntry;
 import com.theredpixelteam.upm4j.plugin.PluginAttribution;
 import org.objectweb.asm.tree.AnnotationNode;
 
