@@ -49,6 +49,7 @@ public class PluginInjector {
     }
 
     public static @Nonnull Optional<PluginInjector> ofConstructor(@Nonnull InvokerProvider invokerProvider,
+                                                                  @Nonnull ClassLoader pluginClassLoader,
                                                                   @Nonnull PluginInjection injection,
                                                                   @Nonnull Class<?> type)
     {
@@ -63,7 +64,7 @@ public class PluginInjector {
             if ((constructor = getConstructorSilently(type, pattern.getParamTypes())) == null)
                 continue;
 
-            ConstructorInvoker invoker = invokerProvider.provideConstructorInvoker(constructor);
+            ConstructorInvoker invoker = invokerProvider.provideConstructorInvoker(constructor, pluginClassLoader);
 
             return Optional.of(new PluginInjector(pattern, invoker));
         }
@@ -82,6 +83,7 @@ public class PluginInjector {
     }
 
     public static @Nullable Optional<PluginInjector> ofMethod(@Nonnull InvokerProvider invokerProvider,
+                                                              @Nonnull ClassLoader pluginClassLoader,
                                                               @Nonnull PluginInjection injection,
                                                               @Nonnull Class<?> type,
                                                               @Nonnull String methodName)
@@ -89,7 +91,7 @@ public class PluginInjector {
         Objects.requireNonNull(invokerProvider, "invokerProvider");
         Objects.requireNonNull(injection, "injection");
         Objects.requireNonNull(type, "type");
-        Objects.requireNonNull(methodName, "methdoName");
+        Objects.requireNonNull(methodName, "methodName");
 
         for (PluginInjectionPattern pattern : injection.getPatterns())
         {
@@ -98,7 +100,7 @@ public class PluginInjector {
             if ((method = getMethodSilently(type, methodName, pattern.getParamTypes())) == null)
                 continue;
 
-            MethodInvoker invoker = invokerProvider.provideMethodInvoker(method);
+            MethodInvoker invoker = invokerProvider.provideMethodInvoker(method, pluginClassLoader);
 
             return Optional.of(new PluginInjector(pattern, invoker));
         }

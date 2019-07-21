@@ -178,7 +178,7 @@ public class PluginConstructor {
             postConstructionStart(context, attribution, mainClass);
 
             Optional<PluginInjector> injector = PluginInjector
-                    .ofConstructor(context.getInvokerProvider(), context.getInjection(), mainClass);
+                    .ofConstructor(context.getInvokerProvider(), classLoader, context.getInjection(), mainClass);
 
             Object instance;
             if (injector.isPresent())

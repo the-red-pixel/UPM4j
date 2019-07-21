@@ -32,9 +32,9 @@ public class SimplePluginClassLoaderProvider implements PluginClassLoaderProvide
     {
         if (global)
             return globalMap.computeIfAbsent(context,
-                    ctx -> new PluginClassLoader(ctx, checkBytesRef, checkClassName, true));
+                    ctx -> new PluginClassLoader(parent, ctx, checkBytesRef, checkClassName, true));
 
-        return new PluginClassLoader(context, checkBytesRef, checkClassName, false);
+        return new PluginClassLoader(parent, context, checkBytesRef, checkClassName, false);
     }
 
     private final WeakHashMap<UPMContext, PluginClassLoader> globalMap;

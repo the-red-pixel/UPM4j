@@ -294,7 +294,7 @@ public class UPMContext {
 
         private PluginInjection injection;
 
-        private ClassTweakerNamespace tweakers;
+        private ClassTweakerNamespace tweakers = new ClassTweakerNamespace();
 
         private final PluginVerificationManager pluginVerificationManager = new PluginVerificationManager();
     }

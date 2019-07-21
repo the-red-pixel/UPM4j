@@ -16,13 +16,14 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.security.ProtectionDomain;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-public class PluginClassLoader extends ClassLoader {
+public class PluginClassLoader extends ClassLoader implements ClassDefineExposed {
     public PluginClassLoader(@Nullable ClassLoader parent,
                              @Nonnull UPMContext context,
                              boolean checkBytsRef,
@@ -424,6 +425,25 @@ public class PluginClassLoader extends ClassLoader {
     public @Nonnull Optional<Source> getSource(String name)
     {
         return Optional.ofNullable(this.sources.get(name));
+    }
+
+    @Override
+    public @Nonnull Class<?> define(@Nullable String name,
+                                    @Nonnull byte[] byts,
+                                    int off,
+                                    int len)
+    {
+        return defineClass(name, byts, off, len);
+    }
+
+    @Override
+    public @Nonnull Class<?> define(@Nullable String name,
+                                    @Nonnull byte[] byts,
+                                    int off,
+                                    int len,
+                                    @Nullable ProtectionDomain protectionDomain)
+    {
+        return defineClass(name, byts, off, len, protectionDomain);
     }
 
     public boolean isGlobal()

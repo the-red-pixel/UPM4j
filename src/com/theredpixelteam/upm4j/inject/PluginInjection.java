@@ -39,6 +39,17 @@ public final class PluginInjection {
         }
     }
 
+    private PluginInjection(@Nonnull PluginInjectionPattern[] patterns)
+    {
+        this.patterns = patterns;
+        this.priority = PatternPriority.FIRST_IN_FIRST;
+    }
+
+    public static @Nonnull PluginInjection singleton(@Nonnull PluginInjectionPattern pattern)
+    {
+        return new PluginInjection(new PluginInjectionPattern[] {pattern});
+    }
+
     public @Nonnull Collection<PluginInjectionPattern> getPatterns()
     {
         return Collections.unmodifiableCollection(Arrays.asList(patterns));
