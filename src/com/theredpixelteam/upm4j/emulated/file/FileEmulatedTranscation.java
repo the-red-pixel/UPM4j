@@ -6,6 +6,7 @@ import com.theredpixelteam.upm4j.emulated.EmulatedTranscation;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.*;
+import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -89,12 +90,46 @@ public class FileEmulatedTranscation implements EmulatedTranscation {
     @Override
     public boolean delete() throws IOException
     {
-        return file.delete();
+        boolean r;
+        if ((r = file.delete()) && !root.is(FileEmulated.DISABLE_DIRECTORY_CLEANUP))
+        {
+            File parent = file.getParentFile();
+
+            while (parent != null && !parent.equals(root.getRoot()))
+            {
+                String[] list = parent.list();
+
+                if (list == null) // indicated that it's not a directory
+                    break;
+
+                if (list.length == 0)
+                {
+                    if (!parent.delete())
+                        break;
+
+                    parent = parent.getParentFile();
+                }
+            }
+        }
+
+        return r;
     }
 
     @Override
     public boolean create() throws IOException
     {
+        LinkedList<File> directories = new LinkedList<>();
+
+        File directory = file.getParentFile();
+        while (directory != null && !directory.isDirectory())
+        {
+            directories.addLast(directory);
+            directory = directory.getParentFile();
+        }
+
+        while (!directories.isEmpty())
+            directories.pollLast().mkdir();
+
         return file.createNewFile();
     }
 

@@ -26,24 +26,21 @@ import java.util.jar.Manifest;
 public class PluginClassLoader extends ClassLoader implements ClassDefineExposed {
     public PluginClassLoader(@Nullable ClassLoader parent,
                              @Nonnull UPMContext context,
-                             boolean checkBytsRef,
-                             boolean checkClassName,
-                             boolean global)
+                             boolean global,
+                             int options)
     {
         super(parent);
         this.context = Objects.requireNonNull(context, "context");
         this.tweakers = context.getTweakers().clone();
-        this.checkBytesRef = checkBytsRef;
-        this.checkClassName = checkClassName;
+        this.options = options;
         this.global = global;
     }
 
     public PluginClassLoader(@Nonnull UPMContext context,
-                             boolean checkBytsRef,
-                             boolean checkClassName,
-                             boolean global)
+                             boolean global,
+                             int options)
     {
-        this(null, context, checkBytsRef, checkClassName, global);
+        this(null, context, global, options);
     }
 
     public @Nonnull ClassTweakerNamespace getTweakers()
@@ -185,6 +182,7 @@ public class PluginClassLoader extends ClassLoader implements ClassDefineExposed
             throw new ClassNotFoundException(name, e);
         }
 
+        int tweakerCount = 0;
         if (postTweakStart(context, name, byts))
             postTweakCancelled(context, name, byts);
         else
@@ -221,8 +219,9 @@ public class PluginClassLoader extends ClassLoader implements ClassDefineExposed
                         byte[] oldRef = byts;
 
                         byts = tweaker.tweak(byts);
+                        tweakerCount++;
 
-                        if (checkBytesRef && (byts == oldRef)) // check byte array ref
+                        if (is(CHECK_BYTE_ARRAY_REF) && (byts == oldRef)) // check byte array ref
                             postTweakerIdenticalBytesRef(context, name, byts, tweaker);
                     } catch (Exception e) {
                         if (postTweakerFailure(context, name, byts, tweaker, e))
@@ -241,7 +240,7 @@ public class PluginClassLoader extends ClassLoader implements ClassDefineExposed
             }
 
         // check class name
-        if (checkClassName)
+        if (tweakerCount != 0 && is(CHECK_TWEAKED_CLASS_NAME))
         {
             String newName = ClassNameReader.from(ByteBuffer.wrap(byts)).replace('/', '.');
 
@@ -417,9 +416,9 @@ public class PluginClassLoader extends ClassLoader implements ClassDefineExposed
         }
     }
 
-    public boolean ifCheckBytesRef()
+    public int getOptions()
     {
-        return checkBytesRef;
+        return options;
     }
 
     public @Nonnull Optional<Source> getSource(String name)
@@ -446,6 +445,11 @@ public class PluginClassLoader extends ClassLoader implements ClassDefineExposed
         return defineClass(name, byts, off, len, protectionDomain);
     }
 
+    boolean is(int option_bit)
+    {
+        return (options & option_bit) != 0;
+    }
+
     public boolean isGlobal()
     {
         return global;
@@ -463,9 +467,7 @@ public class PluginClassLoader extends ClassLoader implements ClassDefineExposed
 
     private final boolean global;
 
-    private final boolean checkBytesRef;
-
-    private final boolean checkClassName;
+    private final int options;
 
     private final UPMContext context;
 
@@ -482,4 +484,8 @@ public class PluginClassLoader extends ClassLoader implements ClassDefineExposed
     private final Set<String> invalidClasses = new ConcurrentSkipListSet<>();
 
     private static final Manifest EMPTY_MANIFEST = new Manifest();
+
+    public static final int CHECK_BYTE_ARRAY_REF = 0x01;
+
+    public static final int CHECK_TWEAKED_CLASS_NAME = 0x02;
 }

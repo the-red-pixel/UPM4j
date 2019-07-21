@@ -11,9 +11,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @ThreadSafe
 public class FileEmulated implements Emulated {
-    public FileEmulated(@Nonnull File root)
+    public FileEmulated(@Nonnull File root, int options)
     {
         this.root = Objects.requireNonNull(root);
+        this.options = options;
+    }
+
+    public FileEmulated(@Nonnull File root)
+    {
+        this(root, 0);
     }
 
     @Override
@@ -64,6 +70,16 @@ public class FileEmulated implements Emulated {
         return paths;
     }
 
+    public @Nonnull int getOptions()
+    {
+        return options;
+    }
+
+    boolean is(int option_bit)
+    {
+        return (options & option_bit) != 0;
+    }
+
     public @Nonnull File getRoot()
     {
         return root;
@@ -100,5 +116,9 @@ public class FileEmulated implements Emulated {
 
     private final File root;
 
+    private final int options;
+
     private final Map<String, EmulatedTranscation> transcations = new ConcurrentHashMap<>();
+
+    public static final int DISABLE_DIRECTORY_CLEANUP = 0x01;
 }

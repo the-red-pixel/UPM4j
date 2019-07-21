@@ -9,22 +9,19 @@ import java.util.WeakHashMap;
 public class SimplePluginClassLoaderProvider implements PluginClassLoaderProvider {
     public SimplePluginClassLoaderProvider(@Nullable ClassLoader parent,
                                            boolean global,
-                                           boolean checkBytesRef,
-                                           boolean checkClassName)
+                                           int options)
     {
         this.parent = parent;
         this.global = global;
-        this.checkBytesRef = checkBytesRef;
-        this.checkClassName = checkClassName;
+        this.options = options;
 
         this.globalMap = global ? new WeakHashMap<>() : null;
     }
 
     public SimplePluginClassLoaderProvider(boolean global,
-                                           boolean checkBytesRef,
-                                           boolean checkClassName)
+                                           int options)
     {
-        this(null, global, checkBytesRef, checkClassName);
+        this(null, global, options);
     }
 
     @Override
@@ -32,18 +29,16 @@ public class SimplePluginClassLoaderProvider implements PluginClassLoaderProvide
     {
         if (global)
             return globalMap.computeIfAbsent(context,
-                    ctx -> new PluginClassLoader(parent, ctx, checkBytesRef, checkClassName, true));
+                    ctx -> new PluginClassLoader(parent, ctx, true, options));
 
-        return new PluginClassLoader(parent, context, checkBytesRef, checkClassName, false);
+        return new PluginClassLoader(parent, context, false, options);
     }
 
     private final WeakHashMap<UPMContext, PluginClassLoader> globalMap;
 
     private final ClassLoader parent;
 
-    private final boolean checkBytesRef;
-
-    private final boolean checkClassName;
+    private final int options;
 
     private final boolean global;
 }
